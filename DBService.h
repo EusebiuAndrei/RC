@@ -34,6 +34,7 @@ int DBService_displaySongsByGenres(char genres[20]);
 int DBService_displaySongs();
 
 int DBService_addComment(char username[20], char link[20], char text[20]);
+int DBService_getCommentsForSong(char link[20]);
 
 void _populateUser(struct User* user);
 void _bindParemter(char query[QUERY_LENGTH], char *value);

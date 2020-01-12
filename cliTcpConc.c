@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <netdb.h>
 #include <string.h>
@@ -25,6 +26,58 @@ void loginUser(int sd);
 void registerUser(int sd);
 void addSong(int sd);
 void closeApp(int sd);
+
+void readField(char *field, char *numeField) {
+  bzero (field, 20);
+  
+  printf ("[client]Introduceti %s: ", numeField);
+  fflush (stdout);
+  
+  read (0, field, 20);
+  printf("%s: %s", numeField, field);
+}
+
+void readResponse(int sd, char* sir, int length) {
+  /* citirea raspunsului dat de server 
+     (apel blocant pina cind serverul raspunde) */
+  if (read (sd, sir, length) < 0) {
+    perror ("[client]Eroare la read() de la server.\n");
+    // return errno;
+  }
+}
+
+void sendResponse(int sd, char* sir, int length) {
+  /* trimiterea mesajului la server */
+  if (write (sd, sir, length) <= 0) {
+    perror ("[client]Eroare la write() spre server.\n");
+    // return errno;
+  }
+}
+
+void createMsg(char msg[100], int num, ...) {
+  va_list valist;
+  char sir[100];
+  int i;
+
+  bzero(msg, 100);
+  /* initialize valist for num number of arguments */
+  va_start(valist, num);
+
+  bzero(sir, 100);
+  strcpy(sir, va_arg(valist, char*));
+  strncat(msg, sir, strlen(sir) - 1);
+
+  /* access all the arguments assigned to valist */
+  for (i = 1; i < num; i++) {
+    bzero(sir, 100);
+    strcpy(sir, va_arg(valist, char*));
+    strcat(msg, ":");
+    strncat(msg, sir, strlen(sir) - 1);
+  }
+	
+  /* clean memory reserved for valist */
+  va_end(valist);
+}
 
 int main (int argc, char *argv[])
 {
@@ -111,48 +164,17 @@ void loginUser(int sd) {
   char username[20], password[20];
   char code[10] = "0";
 
-  /* trimiterea mesajului la server */
-  if (write (sd, code, 10) <= 0)
-    {
-      perror ("[client]Eroare la write() spre server.\n");
-      // return errno;
-    }
+  sendResponse(sd, code, 10);
 
-  // citirea date
-  bzero (username, 20);
-  printf ("[client]Introduceti un nume: ");
-  fflush (stdout);
-  read (0, username, 20);
-  printf("USERNAME: %s", username);
+  readField(username, "username");
+  readField(password, "password");
 
-  bzero (password, 20);
-  printf ("[client]Introduceti o parola: ");
-  fflush (stdout);
-  read (0, password, 20);
-  printf("PASSWORD: %s", password);
-
-  // creare mesaj
-  strncat(msg, username, strlen(username) - 1);
-  strcat(msg, ":");
-  strncat(msg, password, strlen(password) - 1);
-
-  printf("Mesajul este: %s\n", msg);
-
-  /* trimiterea mesajului la server */
-  if (write (sd, msg, 100) <= 0)
-    {
-      perror ("[client]Eroare la write() spre server.\n");
-      // return errno;
-    }
-
-  /* citirea raspunsului dat de server 
-     (apel blocant pina cind serverul raspunde) */
-  if (read (sd, msg, 100) < 0)
-    {
-      perror ("[client]Eroare la read() de la server.\n");
-      // return errno;
-    }
-  /* afisam mesajul primit */
+  createMsg(msg, 2, username, password);
+  printf("MESSAGE: %s\n", msg);
+  
+  sendResponse(sd, msg, 100);
+  
+  readResponse(sd, msg, 100);
   printf ("[client]Mesajul primit este: %s\n", msg);
 }
 
@@ -161,91 +183,34 @@ void registerUser(int sd) {
   char username[20], password[20], role[20];
   char code[10] = "3";
 
-  // citirea date
-  bzero (username, 20);
-  printf ("[client]Introduceti un nume: ");
-  fflush (stdout);
-  read (0, username, 20);
-  printf("USERNAME: %s", username);
+  readField(username, "username");
 
-  strncat(msg, username, strlen(username) - 1);
+  createMsg(msg, 1, username);
 
-  /* trimiterea mesajului la server */
-  if (write (sd, code, 10) <= 0)
-    {
-      perror ("[client]Eroare la write() spre server.\n");
-      // return errno;
-    }
+  sendResponse(sd, code, 10);
+  sendResponse(sd, msg, 100);
 
-  /* trimiterea mesajului la server */
-  if (write (sd, msg, 100) <= 0)
-    {
-      perror ("[client]Eroare la write() spre server.\n");
-      // return errno;
-    }
-
-  /* citirea raspunsului dat de server 
-     (apel blocant pina cind serverul raspunde) */
-  if (read (sd, msg, 100) < 0)
-    {
-      perror ("[client]Eroare la read() de la server.\n");
-      // return errno;
-    }
-
+  readResponse(sd, msg, 100);
   printf("%s\n", msg);
 
-  // Username-ul exista deja
+  // Username-ul exista deja - needs retry
   if(strcmp(msg, "OK")) {
     registerUser(sd);
     return;
   }
 
   strcpy(code, "1");
-  bzero(msg, 100);
-  /* trimiterea mesajului la server */
-  if (write (sd, code, 10) <= 0)
-    {
-      perror ("[client]Eroare la write() spre server.\n");
-      // return errno;
-    }
+  sendResponse(sd, code, 10);
 
-  // citirea date
-  bzero (password, 20);
-  printf ("[client]Introduceti o parola: ");
-  fflush (stdout);
-  read (0, password, 20);
-  printf("PASSWORD: %s", password);
+  readField(password, "password");
+  readField(role, "role");
 
-  bzero (role, 20);
-  printf ("[client]Alegeti tipul contului: ");
-  fflush (stdout);
-  read (0, role, 20);
-  printf("ROLE: %s", role);
-
-  // creare mesaj
-  strncat(msg, username, strlen(username) - 1);
-  strcat(msg, ":");
-  strncat(msg, password, strlen(password) - 1);
-  strcat(msg, ":");
-  strncat(msg, role, strlen(role) - 1);
-
+  createMsg(msg, 3, username, password, role);
   printf("Mesajul este: %s\n", msg);
 
-  /* trimiterea mesajului la server */
-  if (write (sd, msg, 100) <= 0)
-    {
-      perror ("[client]Eroare la write() spre server.\n");
-      // return errno;
-    }
+  sendResponse(sd, msg, 100);
 
-  /* citirea raspunsului dat de server 
-     (apel blocant pina cind serverul raspunde) */
-  if (read (sd, msg, 100) < 0)
-    {
-      perror ("[client]Eroare la read() de la server.\n");
-      // return errno;
-    }
-  /* afisam mesajul primit */
+  readResponse(sd, msg, 100);
   printf ("[client]Mesajul primit este: %s\n", msg);
 }
 
