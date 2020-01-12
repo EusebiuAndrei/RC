@@ -23,6 +23,7 @@ void getUsers();
 
 void _bindParemter(char query[QUERY_LENGTH], char *value);
 int DBService_initializeDB();
+int DBService_closeDB();
 int DBService_loginUser(char *username, char *password);
 int DBService_registerUser(char *role, char* username, char* password);
 
@@ -37,6 +38,18 @@ int DBService_initializeDB() {
         return 0;
     }
 };
+
+int DBService_closeDB() {
+    command = sqlite3_close(DB);
+
+    if(command) {
+        fprintf(stderr, "The db could not be closed: %s.\n", sqlite3_errmsg(DB));
+        return 1;
+    } else {
+        fprintf(stderr, "I've closed the DB.\n");
+        return 0;
+    }
+}
 
 void _bindParemter(char query[QUERY_LENGTH], char *value) {
     char *firstParam = strchr(query, '?');

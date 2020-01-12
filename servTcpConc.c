@@ -12,11 +12,17 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <sqlite3.h>
+#include "DBService.h"
+#include "business.h"
+
 /* portul folosit */
-#define PORT 2024
+#define PORT 2026
 
 /* codul de eroare returnat de anumite apeluri */
 extern int errno;
+
+void registerUser(int client);
 
 int main ()
 {
@@ -51,6 +57,9 @@ int main ()
     	perror ("[server]Eroare la bind().\n");
     	return errno;
     }
+
+	// Initializam baza de date
+	DBService_initializeDB();
 
     /* punem serverul sa asculte daca vin clienti sa se conecteze */
     if (listen (sd, 1) == -1)
@@ -106,22 +115,24 @@ int main ()
 
     		printf ("[server]Mesajul a fost receptionat...%s\n", msg);
 
-    		/*pregatim mesajul de raspuns */
-    		bzero(msgrasp,100);
-    		strcat(msgrasp,"Hello ");
-    		strcat(msgrasp,msg);
+			char codeInt = msg[0] - '0';
 
-    		printf("[server]Trimitem mesajul inapoi...%s\n",msgrasp);
+			switch (codeInt)
+			{
+				case LOGIN:
+					printf("Login\n");
+					break;
 
-
-    		/* returnam mesajul clientului */
-    		if (write (client, msgrasp, 100) <= 0)
-    		{
-    			perror ("[server]Eroare la write() catre client.\n");
-    			continue;		/* continuam sa ascultam */
-    		}
-    		else
-    			printf ("[server]Mesajul a fost trasmis cu succes.\n");
+				case REGISTER:
+					registerUser(client);
+					printf("Register\n");
+					break;
+				
+				default:
+					break;
+			}
+			
+			printf("FINISHED\n");
     		
     		/* am terminat cu acest client, inchidem conexiunea */
     		close (client);
@@ -129,4 +140,63 @@ int main ()
     	}
 
     }				/* while */
+
+	// Inchidem baza de date
+	DBService_closeDB();
 }				/* main */
+
+void registerUser(int client) {
+	char msg[100];		//mesajul primit de la client
+    char msgrasp[100]=" ";        //mesaj de raspuns pentru client
+
+	/* s-a realizat conexiunea, se astepta mesajul */
+	bzero (msg, 100);
+	printf ("[server]Asteptam mesajul...\n");
+	fflush (stdout);
+
+	/* citirea mesajului */
+	if (read (client, msg, 100) <= 0)
+	{
+		perror ("[server]Eroare la read() de la client.\n");
+		close (client);	/* inchidem conexiunea cu clientul */
+	}
+
+	char username[20], password[20], role[20];
+	char *sir = strtok(msg, ":");
+	int i = 0;
+
+	while(sir) {
+		if(i == 0) 
+			strcpy(username, sir);
+		if(i == 1)
+			strcpy(password, sir);
+		if(i == 2)
+			strcpy(role, sir);
+
+		i++;
+		sir = strtok(NULL, ":");
+	}
+
+	printf("USERNAME: %s\n", username);
+	printf("PASSWORD: %s\n", password);
+	printf("ROLE: %s\n", role);
+
+	// Apelam baza de date
+	int code = DBService_registerUser(role, username, password);
+	printf("Apel DB: %d\n", code);
+
+	/*pregatim mesajul de raspuns */
+	bzero(msgrasp,100);
+	strcat(msgrasp,"Hello ");
+	strcat(msgrasp,msg);
+
+	printf("[server]Trimitem mesajul inapoi...%s\n",msgrasp);
+
+	/* returnam mesajul clientului */
+	if (write (client, msgrasp, 100) <= 0)
+	{
+		perror ("[server]Eroare la write() catre client.\n");
+	}
+	else
+		printf ("[server]Mesajul a fost trasmis cu succes.\n");
+}

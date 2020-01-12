@@ -10,5 +10,7 @@ int main() {
     //int code = DBService_registerUser("admin", "Donovan", "abc");
     printf("%d\n", code);
 
+    DBService_closeDB();
+
     return 0;
 }
