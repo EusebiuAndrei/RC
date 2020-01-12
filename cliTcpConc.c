@@ -22,6 +22,7 @@ extern int errno;
 int port;
 
 void registerUser(int sd);
+void closeApp(int sd);
 
 int main (int argc, char *argv[])
 {
@@ -65,48 +66,33 @@ int main (int argc, char *argv[])
   char code[10];
   int isConnected = 1, codeInt;
 
-  // Select the command
-  bzero (code, 10);
-  printf ("[client]Alegeti o comanda: ");
-  fflush (stdout);
-  read (0, code, 10);
-  codeInt = code[0] - '0';
-  
-  switch (codeInt)
-  {
-    case LOGIN: 
-      printf("Login");
-      break;
+  while(isConnected) {
+    // Select the command
+    bzero (code, 10);
+    printf ("[client]Alegeti o comanda: ");
+    fflush (stdout);
+    read (0, code, 10);
 
-    case REGISTER:
-      printf("Register\n");
-      registerUser(sd);
-      break;
+    codeInt = code[0] - '0';
+    
+    switch (codeInt)
+    {
+      case LOGIN: 
+        printf("Login");
+        break;
 
-    default:
-      break;
+      case REGISTER:
+        printf("Register\n");
+        registerUser(sd);
+        break;
+
+      case EXIT:
+        printf("Exit\n");
+        isConnected = 0;
+        closeApp(sd);
+        break;
+    }
   }
-
-  // while(isConnected) {
-
-  // }
-
-  // /* trimiterea mesajului la server */
-  // if (write (sd, msg, 100) <= 0)
-  //   {
-  //     perror ("[client]Eroare la write() spre server.\n");
-  //     return errno;
-  //   }
-
-  // /* citirea raspunsului dat de server 
-  //    (apel blocant pina cind serverul raspunde) */
-  // if (read (sd, msg, 100) < 0)
-  //   {
-  //     perror ("[client]Eroare la read() de la server.\n");
-  //     return errno;
-  //   }
-  // /* afisam mesajul primit */
-  // printf ("[client]Mesajul primit este: %s\n", msg);
 
   /* inchidem conexiunea, am terminat */
   close (sd);
@@ -168,4 +154,15 @@ void registerUser(int sd) {
     }
   /* afisam mesajul primit */
   printf ("[client]Mesajul primit este: %s\n", msg);
+}
+
+void closeApp(int sd) {
+  char code[10] = "2";
+
+  /* trimiterea mesajului la server */
+  if (write (sd, code, 10) <= 0)
+    {
+      perror ("[client]Eroare la write() spre server.\n");
+      // return errno;
+    }
 }

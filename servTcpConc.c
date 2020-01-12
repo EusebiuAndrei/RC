@@ -101,38 +101,49 @@ int main ()
     		close(sd);
 
     		/* s-a realizat conexiunea, se astepta mesajul */
-    		bzero (msg, 100);
-    		printf ("[server]Asteptam mesajul...\n");
-    		fflush (stdout);
 
-    		/* citirea mesajului */
-    		if (read (client, msg, 100) <= 0)
-    		{
-    			perror ("[server]Eroare la read() de la client.\n");
-    			close (client);	/* inchidem conexiunea cu clientul */
-    			continue;		/* continuam sa ascultam */
-    		}
+			int isConnected = 1;
 
-    		printf ("[server]Mesajul a fost receptionat...%s\n", msg);
+			while(isConnected) {
 
-			char codeInt = msg[0] - '0';
+				bzero (msg, 100);
+				printf ("[server]Asteptam mesajul...\n");
+				fflush (stdout);
 
-			switch (codeInt)
-			{
-				case LOGIN:
-					printf("Login\n");
-					break;
+				/* citirea mesajului */
+				if (read (client, msg, 100) <= 0)
+				{
+					perror ("[server]Eroare la read() de la client.\n");
+					close (client);	/* inchidem conexiunea cu clientul */
+					continue;		/* continuam sa ascultam */
+				}
 
-				case REGISTER:
-					registerUser(client);
-					printf("Register\n");
-					break;
+				printf ("[server]Mesajul a fost receptionat...%s\n", msg);
+
+				char codeInt = msg[0] - '0';
+
+				switch (codeInt)
+				{
+					case LOGIN:
+						printf("Login\n");
+						break;
+
+					case REGISTER:
+						registerUser(client);
+						printf("Register\n");
+						break;
+					
+					case EXIT:
+						printf("Exit\n");
+						isConnected = 0;
+						break;
+				}
 				
-				default:
-					break;
+				printf("FINISHED\n");
+
 			}
-			
-			printf("FINISHED\n");
+
+			printf("Job done with this client\n");
     		
     		/* am terminat cu acest client, inchidem conexiunea */
     		close (client);
