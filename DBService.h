@@ -19,15 +19,20 @@ char *errorMessage;
 int command;
 sqlite3_stmt* capat;
 
-void getRowInfo(char *tabel);
-void getUsers();
-
-void _populateUser(struct User* user);
-void _bindParemter(char query[QUERY_LENGTH], char *value);
 int DBService_initializeDB();
 int DBService_closeDB();
 int DBService_loginUser(char *username, char *password, struct User* user);
 int DBService_registerUser(char *role, char* username, char* password, struct User* user);
+
+int DBService_addSong(char title[20], char description[20], char link[50], char genres[50]);
+
+void _populateUser(struct User* user);
+void _bindParemter(char query[QUERY_LENGTH], char *value);
+
+void getRowInfo(char *tabel);
+void getUsers();
+
+// DB connection related
 
 int DBService_initializeDB() {
     command = sqlite3_open("./top-music", &DB);
@@ -52,6 +57,8 @@ int DBService_closeDB() {
         return 0;
     }
 }
+
+// User registration/login process
 
 int DBService_registerUser(char *role, char* username, char* password, struct User* user) {
     char query[500] = "INSERT INTO users (role, username, password) VALUES ('?', '?', '?');";
@@ -119,7 +126,33 @@ int DBService_userExists(char username[20]) {
     return queryExecResponse == SQLITE_ROW ? 1 : 0;
 }
 
-// ==============================================================================================
+// Songs flow
+
+int DBService_addSong(char title[20], char description[20], char link[50], char genres[50]) {
+    char query[QUERY_LENGTH] = "INSERT INTO songs (title, description, link, genres) VALUES('?', '?', '?', '?');";
+    _bindParemter(query, title);
+    _bindParemter(query, description);
+    _bindParemter(query, link);
+    _bindParemter(query, genres);
+
+    command = sqlite3_prepare_v2(DB, query, -1, &capat, 0);
+    printf("%s\n", sqlite3_sql(capat));
+
+    int queryExecResponse = sqlite3_step(capat);
+    command = sqlite3_finalize(capat);
+
+    if(queryExecResponse == SQLITE_DONE) {
+        return 0;
+    }
+
+    if(queryExecResponse == SQLITE_CONSTRAINT) {
+        return 1;
+    }
+
+    return -1;
+}
+
+// Utility functions
 
 void _bindParemter(char query[QUERY_LENGTH], char *value) {
     char *firstParam = strchr(query, '?');

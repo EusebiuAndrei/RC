@@ -26,6 +26,8 @@ void loginUser(int client, struct User* user);
 void registerUser(int client, struct User* user);
 void validateUsername(int client, struct User* user);
 
+void addSong(int client);
+
 int main ()
 {
     struct sockaddr_in server;	// structura folosita de server
@@ -147,6 +149,11 @@ int main ()
 					case VALIDATE_USERNAME:
 						printf("Validate username\n");
 						validateUsername(client, &user);
+						break;
+
+					case ADD_SONG:
+						printf("Add song\n");
+						addSong(client);
 						break;
 					
 					case EXIT:
@@ -326,6 +333,65 @@ void registerUser(int client, struct User* user) {
 
 	/* returnam mesajul clientului */
 	if (write (client, msgrasp, 100) <= 0)
+	{
+		perror ("[server]Eroare la write() catre client.\n");
+	}
+	else
+		printf ("[server]Mesajul a fost trasmis cu succes.\n");
+}
+
+void addSong(int client) {
+	char msg[1000];		//mesajul primit de la client
+    char msgrasp[1000]=" ";        //mesaj de raspuns pentru client
+
+	/* s-a realizat conexiunea, se astepta mesajul */
+	bzero (msg, 1000);
+	printf ("[server]Asteptam mesajul...\n");
+	fflush (stdout);
+
+	/* citirea mesajului */
+	if (read (client, msg, 1000) <= 0)
+	{
+		perror ("[server]Eroare la read() de la client.\n");
+		close (client);	/* inchidem conexiunea cu clientul */
+	}
+
+	char title[20], description[20], genres[20], link[20];
+	char *sir = strtok(msg, ":");
+	int i = 0;
+
+	while(sir) {
+		if(i == 0) 
+			strcpy(title, sir);
+		if(i == 1)
+			strcpy(description, sir);
+		if(i == 2)
+			strcpy(genres, sir);
+		if(i == 3)
+			strcpy(link, sir);
+
+		i++;
+		sir = strtok(NULL, ":");
+	}
+
+	printf("TITLE: %s\n", title);
+	printf("DESCRIPTION: %s\n", description);
+	printf("GENRES: %s\n", genres);
+	printf("LINK: %s\n", link);
+
+	// Apelam baza de date
+	int code = DBService_addSong(title, description, link, genres);
+	printf("Apel DB: %d\n", code);
+
+	/*pregatim mesajul de raspuns */
+	bzero(msgrasp,1000);
+	strcat(msgrasp,"Hello ");
+	strcat(msgrasp,msg);
+
+	printf("[server]Trimitem mesajul inapoi...%s\n",msgrasp);
+
+	/* returnam mesajul clientului */
+	if (write (client, msgrasp, 1000) <= 0)
 	{
 		perror ("[server]Eroare la write() catre client.\n");
 	}

@@ -23,6 +23,7 @@ int port;
 
 void loginUser(int sd);
 void registerUser(int sd);
+void addSong(int sd);
 void closeApp(int sd);
 
 int main (int argc, char *argv[])
@@ -86,6 +87,11 @@ int main (int argc, char *argv[])
       case REGISTER:
         printf("Register\n");
         registerUser(sd);
+        break;
+
+      case ADD_SONG:
+        printf("Add song\n");
+        addSong(sd);
         break;
 
       case EXIT:
@@ -235,6 +241,72 @@ void registerUser(int sd) {
   /* citirea raspunsului dat de server 
      (apel blocant pina cind serverul raspunde) */
   if (read (sd, msg, 100) < 0)
+    {
+      perror ("[client]Eroare la read() de la server.\n");
+      // return errno;
+    }
+  /* afisam mesajul primit */
+  printf ("[client]Mesajul primit este: %s\n", msg);
+}
+
+void addSong(int sd) {
+  char msg[1000] = "";		// mesajul trimis
+  char title[20], description[20], genres[20], link[20];
+  char code[10] = "4";
+
+  /* trimiterea mesajului la server */
+  if (write (sd, code, 10) <= 0)
+    {
+      perror ("[client]Eroare la write() spre server.\n");
+      // return errno;
+    }
+
+  // citirea date
+  bzero (title, 20);
+  printf ("[client]Introduceti titlul: ");
+  fflush (stdout);
+  read (0, title, 20);
+  printf("TITLE: %s", title);
+
+  bzero (description, 20);
+  printf ("[client]Introduceti o descriere: ");
+  fflush (stdout);
+  read (0, description, 20);
+  printf("DESCRIPTION: %s", description);
+
+  bzero (link, 20);
+  printf ("[client]Introduceti un link: ");
+  fflush (stdout);
+  read (0, link, 20);
+  printf("LINK: %s", link);
+
+  bzero (genres, 20);
+  printf ("[client]Selectati genurile: ");
+  fflush (stdout);
+  read (0, genres, 20);
+  printf("GENRES: %s", genres);
+
+  // creare mesaj
+  strncat(msg, title, strlen(title) - 1);
+  strcat(msg, ":");
+  strncat(msg, description, strlen(description) - 1);
+  strcat(msg, ":");
+  strncat(msg, genres, strlen(genres) - 1);
+  strcat(msg, ":");
+  strncat(msg, link, strlen(link) - 1);
+
+  printf("Mesajul este: %s\n", msg);
+
+  /* trimiterea mesajului la server */
+  if (write (sd, msg, 1000) <= 0)
+    {
+      perror ("[client]Eroare la write() spre server.\n");
+      // return errno;
+    }
+
+  /* citirea raspunsului dat de server 
+     (apel blocant pina cind serverul raspunde) */
+  if (read (sd, msg, 1000) < 0)
     {
       perror ("[client]Eroare la read() de la server.\n");
       // return errno;

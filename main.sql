@@ -1,7 +1,8 @@
 -- insert
 
 INSERT INTO users VALUES(1, 'admin', 'Matt', 'abc');
-INSERT INTO songs VALUES(1, 'Sea', 'A song about the sea', '@sea', 0, 'pop');
+INSERT INTO songs (title, description, link, genres)
+ VALUES('Sea', 'A song about the sea', '@sea', 'pop');
 INSERT INTO comments VALUES(1, 1, 1, 'Nice voice');
 
 -- select
