@@ -6,8 +6,14 @@
 int main() {
     DBService_initializeDB();
 
-    int code = DBService_removeSong("fdsa");
-    printf("Song deleted: %d\n", code);
+    int code = DBService_getCommentsForSong("@asa");
+    printf("Commets for a specific song: %d\n", code);
+
+    // int code = DBService_addComment("Bon", "@asa", "Hello boys");
+    // printf("Comment added: %d\n", code);
+
+    // int code = DBService_removeSong("fdsa");
+    // printf("Song deleted: %d\n", code);
 
     // int code = DBService_voteSong("fdsa");
     // printf("Song voted: %d\n", code);

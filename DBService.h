@@ -33,10 +33,13 @@ int DBService_voteSong(char link[20]);
 int DBService_displaySongsByGenres(char genres[20]);
 int DBService_displaySongs();
 
+int DBService_addComment(char username[20], char link[20], char text[20]);
+
 void _populateUser(struct User* user);
 void _bindParemter(char query[QUERY_LENGTH], char *value);
 
 void getRowInfo(char *tabel);
+void getAllRows(char *tabel);
 void getUsers();
 
 // DB connection related
@@ -275,6 +278,59 @@ int DBService_displaySongs() {
     return -1;
 }
 
+// Comments
+
+int DBService_addComment(char username[20], char link[20], char text[20]) {
+    if(!DBService_userExists(username)) return 1;
+    
+    char query[500] = "INSERT INTO comments (id_song, id_user, text) SELECT * FROM (SELECT id_song FROM songs WHERE link = '?'), (SELECT id_user FROM users WHERE username = '?'), (SELECT '?');";
+    _bindParemter(query, link);
+    _bindParemter(query, username);
+    _bindParemter(query, text);
+
+    command = sqlite3_prepare_v2(DB, query, -1, &capat, 0);
+    printf("%s\n", sqlite3_sql(capat));
+
+    int queryExecResponse = sqlite3_step(capat);
+    command = sqlite3_finalize(capat);
+
+    if(queryExecResponse == SQLITE_DONE) {
+        return 0;
+    }
+
+    if(queryExecResponse == SQLITE_CONSTRAINT) {
+        return 1;
+    }
+
+    return -1;
+}
+
+int DBService_getCommentsForSong(char link[20]) {
+    char query[QUERY_LENGTH] = "SELECT * FROM comments WHERE id_song = (SELECT id_song FROM songs WHERE link = '?');";
+    _bindParemter(query, link);
+
+    command = sqlite3_prepare_v2(DB, query, -1, &capat, 0);
+    printf("%s\n", sqlite3_sql(capat));
+
+    int queryExecResponse = sqlite3_step(capat);
+
+    printf("%d\n", queryExecResponse);
+
+    if(queryExecResponse == SQLITE_ROW) {
+        getAllRows(COMMENTS);
+        command = sqlite3_finalize(capat);
+        return 0;
+    }
+
+    command = sqlite3_finalize(capat);
+
+    if(queryExecResponse == SQLITE_DONE) {
+        return 1;
+    }
+
+    return -1;
+}
+
 // Utility functions
 
 void _bindParemter(char query[QUERY_LENGTH], char *value) {
@@ -329,4 +385,15 @@ void getRowInfo(char *tabel) {
         printf("%s ", sqlite3_column_text(capat, i));
     }
     printf("\n");
+}
+
+void getAllRows(char *tabel) {
+    int queryExecResponse;
+
+    do {
+        printf("Good query\n");
+        getRowInfo(tabel);
+    
+        queryExecResponse = sqlite3_step(capat);
+    } while(queryExecResponse == SQLITE_ROW);
 }
