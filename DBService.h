@@ -21,10 +21,17 @@ sqlite3_stmt* capat;
 
 int DBService_initializeDB();
 int DBService_closeDB();
+
 int DBService_loginUser(char *username, char *password, struct User* user);
 int DBService_registerUser(char *role, char* username, char* password, struct User* user);
+int DBService_userExists(char username[20]);
+int DBService_denyVotes(char username[20]);
 
 int DBService_addSong(char title[20], char description[20], char link[50], char genres[50]);
+int DBService_removeSong(char link[20]);
+int DBService_voteSong(char link[20]);
+int DBService_displaySongsByGenres(char genres[20]);
+int DBService_displaySongs();
 
 void _populateUser(struct User* user);
 void _bindParemter(char query[QUERY_LENGTH], char *value);
@@ -126,6 +133,27 @@ int DBService_userExists(char username[20]) {
     return queryExecResponse == SQLITE_ROW ? 1 : 0;
 }
 
+int DBService_denyVotes(char username[20]) {
+    char query[QUERY_LENGTH] = "UPDATE users SET canVote = 0 WHERE username = '?';";
+    _bindParemter(query, username);
+
+    command = sqlite3_prepare_v2(DB, query, -1, &capat, 0);
+    printf("%s\n", sqlite3_sql(capat));
+
+    int queryExecResponse = sqlite3_step(capat);
+    command = sqlite3_finalize(capat);
+
+    if(queryExecResponse == SQLITE_DONE) {
+        return 0;
+    }
+
+    if(queryExecResponse == SQLITE_CONSTRAINT) {
+        return 1;
+    }
+
+    return -1;
+}
+
 // Songs flow
 
 int DBService_addSong(char title[20], char description[20], char link[50], char genres[50]) {
@@ -146,6 +174,101 @@ int DBService_addSong(char title[20], char description[20], char link[50], char 
     }
 
     if(queryExecResponse == SQLITE_CONSTRAINT) {
+        return 1;
+    }
+
+    return -1;
+}
+
+int DBService_removeSong(char link[20]) {
+    char query[QUERY_LENGTH] = "DELETE FROM songs WHERE link = '?';";
+    _bindParemter(query, link);
+
+    printf("fsdfsdsd\n");
+
+    command = sqlite3_prepare_v2(DB, query, -1, &capat, 0);
+    printf("%s\n", sqlite3_sql(capat));
+
+    int queryExecResponse = sqlite3_step(capat);
+    command = sqlite3_finalize(capat);
+
+    if(queryExecResponse == SQLITE_DONE) {
+        return 0;
+    }
+
+    if(queryExecResponse == SQLITE_CONSTRAINT) {
+        return 1;
+    }
+
+    return -1;
+}
+
+int DBService_voteSong(char link[20]) {
+    char query[QUERY_LENGTH] = "UPDATE songs SET votes = votes + 1 WHERE link = '?';";
+    _bindParemter(query, link);
+
+    command = sqlite3_prepare_v2(DB, query, -1, &capat, 0);
+    printf("%s\n", sqlite3_sql(capat));
+
+    int queryExecResponse = sqlite3_step(capat);
+    command = sqlite3_finalize(capat);
+
+    if(queryExecResponse == SQLITE_DONE) {
+        return 0;
+    }
+
+    if(queryExecResponse == SQLITE_CONSTRAINT) {
+        return 1;
+    }
+
+    return -1;
+}
+
+int DBService_displaySongsByGenres(char genres[20]) {
+    char query[QUERY_LENGTH] = "SELECT * FROM songs WHERE genres LIKE '%?%' ORDER BY votes;";
+    _bindParemter(query, genres);
+
+    command = sqlite3_prepare_v2(DB, query, -1, &capat, 0);
+    printf("%s\n", sqlite3_sql(capat));
+
+    int queryExecResponse = sqlite3_step(capat);
+
+    printf("%d\n", queryExecResponse);
+
+    if(queryExecResponse == SQLITE_ROW) {
+        getRowInfo(SONGS);
+        command = sqlite3_finalize(capat);
+        return 0;
+    }
+
+    command = sqlite3_finalize(capat);
+
+    if(queryExecResponse == SQLITE_DONE) {
+        return 1;
+    }
+
+    return -1;
+}
+
+int DBService_displaySongs() {
+    char query[QUERY_LENGTH] = "SELECT * FROM songs ORDER BY votes;";
+
+    command = sqlite3_prepare_v2(DB, query, -1, &capat, 0);
+    printf("%s\n", sqlite3_sql(capat));
+
+    int queryExecResponse = sqlite3_step(capat);
+
+    printf("%d\n", queryExecResponse);
+
+    if(queryExecResponse == SQLITE_ROW) {
+        getRowInfo(SONGS);
+        command = sqlite3_finalize(capat);
+        return 0;
+    }
+
+    command = sqlite3_finalize(capat);
+
+    if(queryExecResponse == SQLITE_DONE) {
         return 1;
     }
 
