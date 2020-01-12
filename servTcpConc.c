@@ -17,13 +17,14 @@
 #include "business.h"
 
 /* portul folosit */
-#define PORT 2025
+#define PORT 2024
 
 /* codul de eroare returnat de anumite apeluri */
 extern int errno;
 
-void loginUser(int client);
-void registerUser(int client);
+void loginUser(int client, struct User* user);
+void registerUser(int client, struct User* user);
+void validateUsername(int client, struct User* user);
 
 int main ()
 {
@@ -74,6 +75,8 @@ int main ()
     {
     	int client;
     	int length = sizeof (from);
+		
+		struct User user;
 
     	printf ("[server]Asteptam la portul %d...\n",PORT);
     	fflush (stdout);
@@ -130,13 +133,20 @@ int main ()
 				switch (codeInt)
 				{
 					case LOGIN:
-						loginUser(client);
+						loginUser(client, &user);
 						printf("Login\n");
+						UserService_displayUser(&user);
 						break;
 
 					case REGISTER:
-						registerUser(client);
+						registerUser(client, &user);
 						printf("Register\n");
+						UserService_displayUser(&user);
+						break;
+
+					case VALIDATE_USERNAME:
+						printf("Validate username\n");
+						validateUsername(client, &user);
 						break;
 					
 					case EXIT:
@@ -162,7 +172,45 @@ int main ()
 	DBService_closeDB();
 }				/* main */
 
-void loginUser(int client) {
+void validateUsername(int client, struct User* user) {
+	char msg[100];		//mesajul primit de la client
+    char msgrasp[100]=" ";        //mesaj de raspuns pentru client
+
+	/* s-a realizat conexiunea, se astepta mesajul */
+	bzero (msg, 100);
+	printf ("[server]Asteptam mesajul...\n");
+	fflush (stdout);
+
+	/* citirea mesajului */
+	if (read (client, msg, 100) <= 0)
+	{
+		perror ("[server]Eroare la read() de la client.\n");
+		close (client);	/* inchidem conexiunea cu clientul */
+	}
+
+	int userExists = DBService_userExists(msg);
+
+	/*pregatim mesajul de raspuns */
+	bzero(msgrasp,100);
+
+	if(userExists) {
+		strcat(msgrasp, "[Error]: This username has already been taken!");
+	} else {
+		strcat(msgrasp, "OK");
+	}
+
+	printf("[server]Trimitem mesajul inapoi...%s\n",msgrasp);
+
+	/* returnam mesajul clientului */
+	if (write (client, msgrasp, 100) <= 0)
+	{
+		perror ("[server]Eroare la write() catre client.\n");
+	}
+	else
+		printf ("[server]Mesajul a fost trasmis cu succes.\n");
+}
+
+void loginUser(int client, struct User* user) {
 	char msg[100];		//mesajul primit de la client
     char msgrasp[100]=" ";        //mesaj de raspuns pentru client
 
@@ -196,13 +244,27 @@ void loginUser(int client) {
 	printf("PASSWORD: %s\n", password);
 
 	// Apelam baza de date
-	int code = DBService_loginUser(username, password);
+	int code = DBService_loginUser(username, password, user);
 	printf("Apel DB: %d\n", code);
 
 	/*pregatim mesajul de raspuns */
 	bzero(msgrasp,100);
-	strcat(msgrasp,"Hello ");
-	strcat(msgrasp,msg);
+	//strcat(msgrasp,"Error: ");
+	//strcat(msgrasp,msg);
+
+	switch (code) {
+		case 1:
+			strcat(msgrasp, "[Error]: The username or password is wrong!");
+			break;
+
+		case -1:
+			strcat(msgrasp, "[Error]: There was a problem with the DB");
+			break;
+		
+		default:
+			strcat(msgrasp, "OK");
+			break;
+	}
 
 	printf("[server]Trimitem mesajul inapoi...%s\n",msgrasp);
 
@@ -215,7 +277,7 @@ void loginUser(int client) {
 		printf ("[server]Mesajul a fost trasmis cu succes.\n");
 }
 
-void registerUser(int client) {
+void registerUser(int client, struct User* user) {
 	char msg[100];		//mesajul primit de la client
     char msgrasp[100]=" ";        //mesaj de raspuns pentru client
 
@@ -252,7 +314,7 @@ void registerUser(int client) {
 	printf("ROLE: %s\n", role);
 
 	// Apelam baza de date
-	int code = DBService_registerUser(role, username, password);
+	int code = DBService_registerUser(role, username, password, user);
 	printf("Apel DB: %d\n", code);
 
 	/*pregatim mesajul de raspuns */

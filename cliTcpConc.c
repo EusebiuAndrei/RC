@@ -153,14 +153,7 @@ void loginUser(int sd) {
 void registerUser(int sd) {
   char msg[100] = "";		// mesajul trimis
   char username[20], password[20], role[20];
-  char code[10] = "1";
-
-  /* trimiterea mesajului la server */
-  if (write (sd, code, 10) <= 0)
-    {
-      perror ("[client]Eroare la write() spre server.\n");
-      // return errno;
-    }
+  char code[10] = "3";
 
   // citirea date
   bzero (username, 20);
@@ -169,6 +162,48 @@ void registerUser(int sd) {
   read (0, username, 20);
   printf("USERNAME: %s", username);
 
+  strncat(msg, username, strlen(username) - 1);
+
+  /* trimiterea mesajului la server */
+  if (write (sd, code, 10) <= 0)
+    {
+      perror ("[client]Eroare la write() spre server.\n");
+      // return errno;
+    }
+
+  /* trimiterea mesajului la server */
+  if (write (sd, msg, 100) <= 0)
+    {
+      perror ("[client]Eroare la write() spre server.\n");
+      // return errno;
+    }
+
+  /* citirea raspunsului dat de server 
+     (apel blocant pina cind serverul raspunde) */
+  if (read (sd, msg, 100) < 0)
+    {
+      perror ("[client]Eroare la read() de la server.\n");
+      // return errno;
+    }
+
+  printf("%s\n", msg);
+
+  // Username-ul exista deja
+  if(strcmp(msg, "OK")) {
+    registerUser(sd);
+    return;
+  }
+
+  strcpy(code, "1");
+  bzero(msg, 100);
+  /* trimiterea mesajului la server */
+  if (write (sd, code, 10) <= 0)
+    {
+      perror ("[client]Eroare la write() spre server.\n");
+      // return errno;
+    }
+
+  // citirea date
   bzero (password, 20);
   printf ("[client]Introduceti o parola: ");
   fflush (stdout);

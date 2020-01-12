@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sqlite3.h>
+#include "UserService.h"
 
 #define QUERY_LENGTH 500
 
@@ -21,11 +22,12 @@ sqlite3_stmt* capat;
 void getRowInfo(char *tabel);
 void getUsers();
 
+void _populateUser(struct User* user);
 void _bindParemter(char query[QUERY_LENGTH], char *value);
 int DBService_initializeDB();
 int DBService_closeDB();
-int DBService_loginUser(char *username, char *password);
-int DBService_registerUser(char *role, char* username, char* password);
+int DBService_loginUser(char *username, char *password, struct User* user);
+int DBService_registerUser(char *role, char* username, char* password, struct User* user);
 
 int DBService_initializeDB() {
     command = sqlite3_open("./top-music", &DB);
@@ -51,6 +53,74 @@ int DBService_closeDB() {
     }
 }
 
+int DBService_registerUser(char *role, char* username, char* password, struct User* user) {
+    char query[500] = "INSERT INTO users (role, username, password) VALUES ('?', '?', '?');";
+    _bindParemter(query, role);
+    _bindParemter(query, username);
+    _bindParemter(query, password);
+
+    command = sqlite3_prepare_v2(DB, query, -1, &capat, 0);
+    printf("%s\n", sqlite3_sql(capat));
+
+    int queryExecResponse = sqlite3_step(capat);
+    command = sqlite3_finalize(capat);
+
+    if(queryExecResponse == SQLITE_DONE) {
+        DBService_loginUser(username, password, user);
+        return 0;
+    }
+
+    if(queryExecResponse == SQLITE_CONSTRAINT) {
+        return 1;
+    }
+
+    return -1;
+}
+
+int DBService_loginUser(char *username, char *password, struct User* user) {
+    char query[QUERY_LENGTH] = "SELECT * FROM users WHERE username = '?' AND password = '?';";
+    _bindParemter(query, username);
+    _bindParemter(query, password);
+
+    command = sqlite3_prepare_v2(DB, query, -1, &capat, 0);
+    printf("%s\n", sqlite3_sql(capat));
+
+    int queryExecResponse = sqlite3_step(capat);
+
+    printf("AM RULAT LOGIN\n");
+    printf("%d\n", queryExecResponse);
+
+    if(queryExecResponse == SQLITE_ROW) {
+        getRowInfo(USERS);
+        _populateUser(user);
+        command = sqlite3_finalize(capat);
+        return 0;
+    }
+
+    command = sqlite3_finalize(capat);
+
+    if(queryExecResponse == SQLITE_DONE) {
+        return 1;
+    }
+
+    return -1;
+}
+
+int DBService_userExists(char username[20]) {
+    char query[QUERY_LENGTH] = "SELECT * FROM users WHERE username = '?';";
+    _bindParemter(query, username);
+
+    command = sqlite3_prepare_v2(DB, query, -1, &capat, 0);
+    printf("%s\n", sqlite3_sql(capat));
+
+    int queryExecResponse = sqlite3_step(capat);
+    command = sqlite3_finalize(capat);
+
+    return queryExecResponse == SQLITE_ROW ? 1 : 0;
+}
+
+// ==============================================================================================
+
 void _bindParemter(char query[QUERY_LENGTH], char *value) {
     char *firstParam = strchr(query, '?');
     
@@ -64,56 +134,22 @@ void _bindParemter(char query[QUERY_LENGTH], char *value) {
     strcpy(query, finalQuery);
 }
 
-int DBService_registerUser(char *role, char* username, char* password) {
-    char query[500] = "INSERT INTO users (role, username, password) VALUES ('?', '?', '?');";
-    _bindParemter(query, role);
-    _bindParemter(query, username);
-    _bindParemter(query, password);
+void _populateUser(struct User* user) {
+    char username[20], password[20], role[20], canVote[20];
+    int canVoteInt;
 
-    command = sqlite3_prepare_v2(DB, query, -1, &capat, 0);
-    printf("%s\n", sqlite3_sql(capat));
+    strcpy(username, sqlite3_column_text(capat, 2));
+    strcpy(password, sqlite3_column_text(capat, 3));
+    strcpy(role, sqlite3_column_text(capat, 1));
+    strcpy(canVote, sqlite3_column_text(capat, 4));
+    canVoteInt = canVote[0] - '0';
 
-    int queryExecResponse = sqlite3_step(capat);
-    command = sqlite3_finalize(capat);
+    //printf("%s %s %s %d\n", username, password, role, canVoteInt);
 
-    if(queryExecResponse == SQLITE_DONE) {
-        DBService_loginUser(username, password);
-        return 0;
-    }
-
-    if(queryExecResponse == SQLITE_CONSTRAINT) {
-        return 1;
-    }
-
-    return -1;
+    UserService_createUser(username, password, role, canVoteInt, user);
 }
 
-int DBService_loginUser(char *username, char *password) {
-    char query[QUERY_LENGTH] = "SELECT * FROM users WHERE username = '?' AND password = '?';";
-    _bindParemter(query, username);
-    _bindParemter(query, password);
-
-    command = sqlite3_prepare_v2(DB, query, -1, &capat, 0);
-    printf("%s\n", sqlite3_sql(capat));
-
-    int queryExecResponse = sqlite3_step(capat);
-
-    if(queryExecResponse == SQLITE_ROW) {
-        getRowInfo(USERS);
-        command = sqlite3_finalize(capat);
-        return 0;
-    }
-
-    command = sqlite3_finalize(capat);
-
-    if(queryExecResponse == SQLITE_CONSTRAINT) {
-        return 1;
-    }
-
-    return -1;
-}
-
-// ==============================
+// ==============================================================================================
 
 void getUsers() {
     char query[QUERY_LENGTH] = "SELECT * FROM users;";
