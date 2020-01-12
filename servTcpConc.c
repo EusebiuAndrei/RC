@@ -17,11 +17,12 @@
 #include "business.h"
 
 /* portul folosit */
-#define PORT 2026
+#define PORT 2025
 
 /* codul de eroare returnat de anumite apeluri */
 extern int errno;
 
+void loginUser(int client);
 void registerUser(int client);
 
 int main ()
@@ -122,9 +123,14 @@ int main ()
 
 				char codeInt = msg[0] - '0';
 
+				printf("CODE\n");
+				printf("%s\n", msg);
+				printf("codeInt: %d\n", codeInt);
+
 				switch (codeInt)
 				{
 					case LOGIN:
+						loginUser(client);
 						printf("Login\n");
 						break;
 
@@ -155,6 +161,59 @@ int main ()
 	// Inchidem baza de date
 	DBService_closeDB();
 }				/* main */
+
+void loginUser(int client) {
+	char msg[100];		//mesajul primit de la client
+    char msgrasp[100]=" ";        //mesaj de raspuns pentru client
+
+	/* s-a realizat conexiunea, se astepta mesajul */
+	bzero (msg, 100);
+	printf ("[server]Asteptam mesajul...\n");
+	fflush (stdout);
+
+	/* citirea mesajului */
+	if (read (client, msg, 100) <= 0)
+	{
+		perror ("[server]Eroare la read() de la client.\n");
+		close (client);	/* inchidem conexiunea cu clientul */
+	}
+
+	char username[20], password[20];
+	char *sir = strtok(msg, ":");
+	int i = 0;
+
+	while(sir) {
+		if(i == 0) 
+			strcpy(username, sir);
+		if(i == 1)
+			strcpy(password, sir);
+
+		i++;
+		sir = strtok(NULL, ":");
+	}
+
+	printf("USERNAME: %s\n", username);
+	printf("PASSWORD: %s\n", password);
+
+	// Apelam baza de date
+	int code = DBService_loginUser(username, password);
+	printf("Apel DB: %d\n", code);
+
+	/*pregatim mesajul de raspuns */
+	bzero(msgrasp,100);
+	strcat(msgrasp,"Hello ");
+	strcat(msgrasp,msg);
+
+	printf("[server]Trimitem mesajul inapoi...%s\n",msgrasp);
+
+	/* returnam mesajul clientului */
+	if (write (client, msgrasp, 100) <= 0)
+	{
+		perror ("[server]Eroare la write() catre client.\n");
+	}
+	else
+		printf ("[server]Mesajul a fost trasmis cu succes.\n");
+}
 
 void registerUser(int client) {
 	char msg[100];		//mesajul primit de la client

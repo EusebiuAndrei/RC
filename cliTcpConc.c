@@ -21,6 +21,7 @@ extern int errno;
 /* portul de conectare la server*/
 int port;
 
+void loginUser(int sd);
 void registerUser(int sd);
 void closeApp(int sd);
 
@@ -79,6 +80,7 @@ int main (int argc, char *argv[])
     {
       case LOGIN: 
         printf("Login");
+        loginUser(sd);
         break;
 
       case REGISTER:
@@ -96,6 +98,56 @@ int main (int argc, char *argv[])
 
   /* inchidem conexiunea, am terminat */
   close (sd);
+}
+
+void loginUser(int sd) {
+  char msg[100] = "";		// mesajul trimis
+  char username[20], password[20];
+  char code[10] = "0";
+
+  /* trimiterea mesajului la server */
+  if (write (sd, code, 10) <= 0)
+    {
+      perror ("[client]Eroare la write() spre server.\n");
+      // return errno;
+    }
+
+  // citirea date
+  bzero (username, 20);
+  printf ("[client]Introduceti un nume: ");
+  fflush (stdout);
+  read (0, username, 20);
+  printf("USERNAME: %s", username);
+
+  bzero (password, 20);
+  printf ("[client]Introduceti o parola: ");
+  fflush (stdout);
+  read (0, password, 20);
+  printf("PASSWORD: %s", password);
+
+  // creare mesaj
+  strncat(msg, username, strlen(username) - 1);
+  strcat(msg, ":");
+  strncat(msg, password, strlen(password) - 1);
+
+  printf("Mesajul este: %s\n", msg);
+
+  /* trimiterea mesajului la server */
+  if (write (sd, msg, 100) <= 0)
+    {
+      perror ("[client]Eroare la write() spre server.\n");
+      // return errno;
+    }
+
+  /* citirea raspunsului dat de server 
+     (apel blocant pina cind serverul raspunde) */
+  if (read (sd, msg, 100) < 0)
+    {
+      perror ("[client]Eroare la read() de la server.\n");
+      // return errno;
+    }
+  /* afisam mesajul primit */
+  printf ("[client]Mesajul primit este: %s\n", msg);
 }
 
 void registerUser(int sd) {
