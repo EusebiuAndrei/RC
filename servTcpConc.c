@@ -18,7 +18,7 @@
 #include "ProtocolService.h"
 
 /* portul folosit */
-#define PORT 2024
+#define PORT 2025
 
 /* codul de eroare returnat de anumite apeluri */
 extern int errno;
@@ -26,6 +26,8 @@ extern int errno;
 void loginUser(int client, struct User* user);
 void registerUser(int client, struct User* user);
 void validateUsername(int client, struct User* user);
+void displayUserNormal(int client);
+void displaySongsByGenres(int client);
 
 void addSong(int client);
 
@@ -156,6 +158,16 @@ int main ()
 						printf("Add song\n");
 						addSong(client);
 						break;
+
+					case DISPLAY_NORMAL:
+						printf("Display normal\n");
+						displayUserNormal(client);
+						break;
+
+					case DISPLAY_GENRES:
+						printf("Display genres\n");
+						displaySongsByGenres(client);
+						break;
 					
 					case EXIT:
 						printf("Exit\n");
@@ -192,9 +204,9 @@ void validateUsername(int client, struct User* user) {
 
 	/*pregatim mesajul de raspuns */
 	if(userExists) {
-		ProtocolService_createMsg(msgrasp, 1, " ", 1, "[Error]: This username has already been taken!");
+		ProtocolService_createMsg(msgrasp, 100, 1, " ", 1, "[Error]: This username has already been taken!");
 	} else {
-		ProtocolService_createMsg(msgrasp, 1, " ", 1, "OK");
+		ProtocolService_createMsg(msgrasp, 100, 1, " ", 1, "OK");
 	}
 
 	printf("userExists: %s\n", msgrasp);
@@ -235,13 +247,13 @@ void loginUser(int client, struct User* user) {
 
 	switch (code) {
 		case 1:
-			ProtocolService_createMsg(msgrasp, 1, " ", 1, "[Error]: The username or password is wrong!");
+			ProtocolService_createMsg(msgrasp, 100, 1, " ", 1, "[Error]: The username or password is wrong!");
 			break;
 		case -1:
-			ProtocolService_createMsg(msgrasp, 1, " ", 1, "[Error]: There was a problem with the DB");
+			ProtocolService_createMsg(msgrasp, 100, 1, " ", 1, "[Error]: There was a problem with the DB");
 			break;
 		default:
-			ProtocolService_createMsg(msgrasp, 1, " ", 1, "OK");
+			ProtocolService_createMsg(msgrasp, 100, 1, " ", 1, "OK");
 			break;
 	}
 
@@ -282,7 +294,7 @@ void registerUser(int client, struct User* user) {
 	printf("Apel DB: %d\n", code);
 
 	/*pregatim mesajul de raspuns */
-	ProtocolService_createMsg(msgrasp, 1, " ", 2, "Hello ", msg);
+	ProtocolService_createMsg(msgrasp, 100, 1, " ", 2, "Hello ", msg);
 
 	printf("[server]Trimitem mesajul inapoi...%s\n",msgrasp);
 	ProtocolService_sendResponse(client, msgrasp, 100, WRITE_SERVER);
@@ -328,9 +340,53 @@ void addSong(int client) {
 	strcat(msgrasp,"Hello ");
 	strcat(msgrasp,msg);
 
-	ProtocolService_createMsg(msgrasp, 1, " ", 2, "Hello ", msg);
+	ProtocolService_createMsg(msgrasp, 100, 1, " ", 2, "Hello ", msg);
 
 	printf("[server]Trimitem mesajul inapoi...%s\n",msgrasp);
 	ProtocolService_sendResponse(client, msgrasp, 100, WRITE_SERVER);
+	printf ("[server]Mesajul a fost trasmis cu succes.\n");
+}
+
+void displayUserNormal(int client) {
+	char msg[100];		//mesajul primit de la client
+    char msgrasp[1000];        //mesaj de raspuns pentru client
+
+
+	// Apelam baza de date
+	bzero(msgrasp, 1000);
+	int code = DBService_displaySongs(msgrasp);
+	printf("Apel DB: %d\n", code);
+	printf("Another one\n%s", msgrasp);
+
+	if(code) {
+		ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "[Error]: There was a problem with the DB");
+	}
+
+	printf("[server]Trimitem mesajul inapoi...%s\n",msgrasp);
+	ProtocolService_sendResponse(client, msgrasp, 1000, WRITE_SERVER);
+	printf ("[server]Mesajul a fost trasmis cu succes.\n");
+}
+
+void displaySongsByGenres(int client) {
+	char msg[100];		//mesajul primit de la client
+    char msgrasp[1000];        //mesaj de raspuns pentru client
+
+	ProtocolService_prepareToRead(msg, 1000);
+	ProtocolService_readResponse(client, msg, 1000, READ_SERVER);
+
+	printf("GEN: %s\n", msg);
+
+	// Apelam baza de date
+	bzero(msgrasp, 1000);
+	int code = DBService_displaySongsByGenres(msg, msgrasp);
+	printf("Apel DB: %d\n", code);
+	printf("BOOM\n%s", msgrasp);
+
+	if(code) {
+		ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "[Error]: There was a problem with the DB");
+	}
+
+	printf("[server]Trimitem mesajul inapoi\n%s",msgrasp);
+	ProtocolService_sendResponse(client, msgrasp, 1000, WRITE_SERVER);
 	printf ("[server]Mesajul a fost trasmis cu succes.\n");
 }

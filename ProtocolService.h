@@ -19,7 +19,7 @@ void ProtocolService_readField(char *field, char *numeField);
 void ProtocolService_readResponse(int sd, char* sir, int length, char *errorMsg);
 void ProtocolService_sendResponse(int sd, char* sir, int length, char *errorMsg);
 void ProtocolService_prepareToRead(char *msg, int length);
-void ProtocolService_createMsg(char msg[100], int isServer, char *linker, int num, ...);
+void ProtocolService_createMsg(char *msg, int length, int isServer, char *linker, int num, ...);
 
 void ProtocolService_readField(char *field, char *numeField) {
   bzero (field, 20);
@@ -55,12 +55,12 @@ void ProtocolService_prepareToRead(char *msg, int length) {
 	fflush (stdout);
 }
 
-void ProtocolService_createMsg(char msg[100], int isServer, char *linker, int num, ...) {
+void ProtocolService_createMsg(char *msg, int length, int isServer, char *linker, int num, ...) {
   va_list valist;
   char sir[100];
   int i;
 
-  bzero(msg, 100);
+  bzero(msg, length);
   /* initialize valist for num number of arguments */
   va_start(valist, num);
 
@@ -73,7 +73,7 @@ void ProtocolService_createMsg(char msg[100], int isServer, char *linker, int nu
     strncat(msg, sir, strlen(sir));
   }
 
-  printf("AAAAAAA: %s\n", msg);
+//  printf("AAAAAAA: %s\n", msg);
 
   /* access all the arguments assigned to valist */
   for (i = 1; i < num; i++) {

@@ -30,17 +30,17 @@ int DBService_denyVotes(char username[20]);
 int DBService_addSong(char title[20], char description[20], char link[50], char genres[50]);
 int DBService_removeSong(char link[20]);
 int DBService_voteSong(char link[20]);
-int DBService_displaySongsByGenres(char genres[20]);
+int DBService_displaySongsByGenres(char genres[20], char msg[1000]);
 int DBService_displaySongs();
 
 int DBService_addComment(char username[20], char link[20], char text[20]);
-int DBService_getCommentsForSong(char link[20]);
+int DBService_getCommentsForSong(char link[20], char msg[1000]);
 
 void _populateUser(struct User* user);
 void _bindParemter(char query[QUERY_LENGTH], char *value);
 
-void getRowInfo(char *tabel);
-void getAllRows(char *tabel);
+void getRowInfo(char *tabel, char row[100]);
+void getAllRows(char *tabel, char msg[1000]);
 void getUsers();
 
 // DB connection related
@@ -109,7 +109,7 @@ int DBService_loginUser(char *username, char *password, struct User* user) {
     printf("%d\n", queryExecResponse);
 
     if(queryExecResponse == SQLITE_ROW) {
-        getRowInfo(USERS);
+        getRowInfo(USERS, "");
         _populateUser(user);
         command = sqlite3_finalize(capat);
         return 0;
@@ -228,7 +228,7 @@ int DBService_voteSong(char link[20]) {
     return -1;
 }
 
-int DBService_displaySongsByGenres(char genres[20]) {
+int DBService_displaySongsByGenres(char genres[20], char msg[1000]) {
     char query[QUERY_LENGTH] = "SELECT * FROM songs WHERE genres LIKE '%?%' ORDER BY votes;";
     _bindParemter(query, genres);
 
@@ -240,7 +240,7 @@ int DBService_displaySongsByGenres(char genres[20]) {
     printf("%d\n", queryExecResponse);
 
     if(queryExecResponse == SQLITE_ROW) {
-        getRowInfo(SONGS);
+        getAllRows(SONGS, msg);
         command = sqlite3_finalize(capat);
         return 0;
     }
@@ -254,7 +254,7 @@ int DBService_displaySongsByGenres(char genres[20]) {
     return -1;
 }
 
-int DBService_displaySongs() {
+int DBService_displaySongs(char msg[1000]) {
     char query[QUERY_LENGTH] = "SELECT * FROM songs ORDER BY votes;";
 
     command = sqlite3_prepare_v2(DB, query, -1, &capat, 0);
@@ -265,7 +265,7 @@ int DBService_displaySongs() {
     printf("%d\n", queryExecResponse);
 
     if(queryExecResponse == SQLITE_ROW) {
-        getRowInfo(SONGS);
+        getAllRows(SONGS, msg);
         command = sqlite3_finalize(capat);
         return 0;
     }
@@ -306,7 +306,7 @@ int DBService_addComment(char username[20], char link[20], char text[20]) {
     return -1;
 }
 
-int DBService_getCommentsForSong(char link[20]) {
+int DBService_getCommentsForSong(char link[20], char msg[1000]) {
     char query[QUERY_LENGTH] = "SELECT * FROM comments WHERE id_song = (SELECT id_song FROM songs WHERE link = '?');";
     _bindParemter(query, link);
 
@@ -318,7 +318,7 @@ int DBService_getCommentsForSong(char link[20]) {
     printf("%d\n", queryExecResponse);
 
     if(queryExecResponse == SQLITE_ROW) {
-        getAllRows(COMMENTS);
+        getAllRows(COMMENTS, msg);
         command = sqlite3_finalize(capat);
         return 0;
     }
@@ -371,30 +371,44 @@ void getUsers() {
    
     while(sqlite3_step(capat) == SQLITE_ROW) {
         printf("Good query\n");
-        getRowInfo(USERS);
+        getRowInfo(USERS, "");
     }
 }
 
-void getRowInfo(char *tabel) {
+void getRowInfo(char *tabel, char row[100]) {
     int n;
+    bzero(row, 100);
 
     if(!strcmp(tabel, USERS)) n = USERS_ROW_LENGTH;
     if(!strcmp(tabel, SONGS)) n = SONGS_ROW_LENGTH;
     if(!strcmp(tabel, COMMENTS)) n = COMMENTS_ROW_LENGTH;
 
+    strcat(row, sqlite3_column_text(capat, 0));
     for(int i = 0; i < n; ++i) {
-        printf("%s ", sqlite3_column_text(capat, i));
+        strcat(row, ":");
+        strcat(row, sqlite3_column_text(capat, i));
     }
-    printf("\n");
+
+    // printf("%s\n", row);
 }
 
-void getAllRows(char *tabel) {
+void getAllRows(char *tabel, char msg[1000]) {
     int queryExecResponse;
+    char sir[100];
+    bzero(msg, 1000);
+
+    printf("Good query\n");
 
     do {
-        printf("Good query\n");
-        getRowInfo(tabel);
-    
+        bzero(sir, 100);
+        getRowInfo(tabel, sir);
+
+        strcat(msg, sir);
+        strcat(msg, "\n");
+
         queryExecResponse = sqlite3_step(capat);
     } while(queryExecResponse == SQLITE_ROW);
+
+    // printf("Final ONE\n");
+    // printf("%s", msg);
 }

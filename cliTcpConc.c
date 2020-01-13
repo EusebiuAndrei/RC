@@ -27,6 +27,9 @@ int port;
 void loginUser(int sd);
 void registerUser(int sd);
 void addSong(int sd);
+void displaySongsNormal(int sd);
+void displaySongsByGenres(int sd);
+
 void closeApp(int sd);
 
 int main (int argc, char *argv[])
@@ -97,6 +100,16 @@ int main (int argc, char *argv[])
         addSong(sd);
         break;
 
+      case DISPLAY_NORMAL:
+        printf("Display normal\n");
+        displaySongsNormal(sd);
+        break;
+
+      case DISPLAY_GENRES:
+        printf("Display genres\n");
+        displaySongsByGenres(sd);
+        break;
+
       case EXIT:
         printf("Exit\n");
         isConnected = 0;
@@ -119,7 +132,7 @@ void loginUser(int sd) {
   ProtocolService_readField(username, "username");
   ProtocolService_readField(password, "password");
 
-  ProtocolService_createMsg(msg, 0, ":", 2, username, password);
+  ProtocolService_createMsg(msg, 100, 0, ":", 2, username, password);
   printf("MESSAGE: %s\n", msg);
   
   ProtocolService_sendResponse(sd, msg, 100, WRITE_CLIENT);
@@ -137,7 +150,7 @@ void registerUser(int sd) {
 
   ProtocolService_readField(username, "username");
 
-  ProtocolService_createMsg(msg, 0, ":", 1, username);
+  ProtocolService_createMsg(msg, 100, 0, ":", 1, username);
   printf("codul este %s\n", msg);
 
   ProtocolService_sendResponse(sd, msg, 100, WRITE_CLIENT);
@@ -157,7 +170,7 @@ void registerUser(int sd) {
   ProtocolService_readField(password, "password");
   ProtocolService_readField(role, "role");
 
-  ProtocolService_createMsg(msg, 0, ":", 3, username, password, role);
+  ProtocolService_createMsg(msg, 100, 0, ":", 3, username, password, role);
   printf("Mesajul este: %s\n", msg);
 
   ProtocolService_sendResponse(sd, msg, 100, WRITE_CLIENT);
@@ -180,7 +193,7 @@ void addSong(int sd) {
   ProtocolService_readField(genres, "genres");
 
   // creare mesaj
-  ProtocolService_createMsg(msg, 0, ":", 4, title, description, genres, link);
+  ProtocolService_createMsg(msg, 100, 0, ":", 4, title, description, genres, link);
   printf("Mesajul este: %s\n", msg);
 
   ProtocolService_sendResponse(sd, msg, 100, WRITE_CLIENT);
@@ -194,4 +207,32 @@ void closeApp(int sd) {
   char code[10] = "2";
 
   ProtocolService_sendResponse(sd, code, 10, WRITE_CLIENT);
+}
+
+void displaySongsNormal(int sd) {
+  char msg[1000] = "";		// mesajul trimis
+  char code[10] = "5";
+
+  ProtocolService_sendResponse(sd, code, 10, WRITE_CLIENT);
+  
+  ProtocolService_readResponse(sd, msg, 1000, READ_CLIENT);
+  printf ("%s", msg);
+}
+
+void displaySongsByGenres(int sd) {
+  char msg[1000] = "";		// mesajul trimis
+  char genre[20];
+  char code[10] = "6";
+
+  ProtocolService_sendResponse(sd, code, 10, WRITE_CLIENT);
+
+  ProtocolService_readField(genre, "genre");
+
+  ProtocolService_createMsg(msg, 1000, 0, ":", 1, genre);
+  printf("MESSAGE: %s\n", msg);
+  
+  ProtocolService_sendResponse(sd, msg, 1000, WRITE_CLIENT);
+  
+  ProtocolService_readResponse(sd, msg, 1000, READ_CLIENT);
+  printf ("%s", msg);
 }
