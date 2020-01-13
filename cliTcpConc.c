@@ -15,7 +15,9 @@
 #include <string.h>
 
 #include "business.h"
+#include "ProtocolService.h"
 
+// ProtocolService_
 /* codul de eroare returnat de anumite apeluri */
 extern int errno;
 
@@ -26,58 +28,6 @@ void loginUser(int sd);
 void registerUser(int sd);
 void addSong(int sd);
 void closeApp(int sd);
-
-void readField(char *field, char *numeField) {
-  bzero (field, 20);
-  
-  printf ("[client]Introduceti %s: ", numeField);
-  fflush (stdout);
-  
-  read (0, field, 20);
-  printf("%s: %s", numeField, field);
-}
-
-void readResponse(int sd, char* sir, int length) {
-  /* citirea raspunsului dat de server 
-     (apel blocant pina cind serverul raspunde) */
-  if (read (sd, sir, length) < 0) {
-    perror ("[client]Eroare la read() de la server.\n");
-    // return errno;
-  }
-}
-
-void sendResponse(int sd, char* sir, int length) {
-  /* trimiterea mesajului la server */
-  if (write (sd, sir, length) <= 0) {
-    perror ("[client]Eroare la write() spre server.\n");
-    // return errno;
-  }
-}
-
-void createMsg(char msg[100], int num, ...) {
-  va_list valist;
-  char sir[100];
-  int i;
-
-  bzero(msg, 100);
-  /* initialize valist for num number of arguments */
-  va_start(valist, num);
-
-  bzero(sir, 100);
-  strcpy(sir, va_arg(valist, char*));
-  strncat(msg, sir, strlen(sir) - 1);
-
-  /* access all the arguments assigned to valist */
-  for (i = 1; i < num; i++) {
-    bzero(sir, 100);
-    strcpy(sir, va_arg(valist, char*));
-    strcat(msg, ":");
-    strncat(msg, sir, strlen(sir) - 1);
-  }
-	
-  /* clean memory reserved for valist */
-  va_end(valist);
-}
 
 int main (int argc, char *argv[])
 {
@@ -164,17 +114,17 @@ void loginUser(int sd) {
   char username[20], password[20];
   char code[10] = "0";
 
-  sendResponse(sd, code, 10);
+  ProtocolService_sendResponse(sd, code, 10, WRITE_CLIENT);
 
-  readField(username, "username");
-  readField(password, "password");
+  ProtocolService_readField(username, "username");
+  ProtocolService_readField(password, "password");
 
-  createMsg(msg, 2, username, password);
+  ProtocolService_createMsg(msg, 0, ":", 2, username, password);
   printf("MESSAGE: %s\n", msg);
   
-  sendResponse(sd, msg, 100);
+  ProtocolService_sendResponse(sd, msg, 100, WRITE_CLIENT);
   
-  readResponse(sd, msg, 100);
+  ProtocolService_readResponse(sd, msg, 100, READ_CLIENT);
   printf ("[client]Mesajul primit este: %s\n", msg);
 }
 
@@ -183,14 +133,16 @@ void registerUser(int sd) {
   char username[20], password[20], role[20];
   char code[10] = "3";
 
-  readField(username, "username");
+  ProtocolService_sendResponse(sd, code, 10, WRITE_CLIENT);
 
-  createMsg(msg, 1, username);
+  ProtocolService_readField(username, "username");
 
-  sendResponse(sd, code, 10);
-  sendResponse(sd, msg, 100);
+  ProtocolService_createMsg(msg, 0, ":", 1, username);
+  printf("codul este %s\n", msg);
 
-  readResponse(sd, msg, 100);
+  ProtocolService_sendResponse(sd, msg, 100, WRITE_CLIENT);
+
+  ProtocolService_readResponse(sd, msg, 100, READ_CLIENT);
   printf("%s\n", msg);
 
   // Username-ul exista deja - needs retry
@@ -200,82 +152,40 @@ void registerUser(int sd) {
   }
 
   strcpy(code, "1");
-  sendResponse(sd, code, 10);
+  ProtocolService_sendResponse(sd, code, 10, WRITE_CLIENT);
 
-  readField(password, "password");
-  readField(role, "role");
+  ProtocolService_readField(password, "password");
+  ProtocolService_readField(role, "role");
 
-  createMsg(msg, 3, username, password, role);
+  ProtocolService_createMsg(msg, 0, ":", 3, username, password, role);
   printf("Mesajul este: %s\n", msg);
 
-  sendResponse(sd, msg, 100);
+  ProtocolService_sendResponse(sd, msg, 100, WRITE_CLIENT);
 
-  readResponse(sd, msg, 100);
+  ProtocolService_readResponse(sd, msg, 100, READ_CLIENT);
   printf ("[client]Mesajul primit este: %s\n", msg);
 }
 
 void addSong(int sd) {
-  char msg[1000] = "";		// mesajul trimis
+  char msg[100] = "";		// mesajul trimis
   char title[20], description[20], genres[20], link[20];
   char code[10] = "4";
 
-  /* trimiterea mesajului la server */
-  if (write (sd, code, 10) <= 0)
-    {
-      perror ("[client]Eroare la write() spre server.\n");
-      // return errno;
-    }
+  ProtocolService_sendResponse(sd, code, 10, WRITE_CLIENT);
 
   // citirea date
-  bzero (title, 20);
-  printf ("[client]Introduceti titlul: ");
-  fflush (stdout);
-  read (0, title, 20);
-  printf("TITLE: %s", title);
-
-  bzero (description, 20);
-  printf ("[client]Introduceti o descriere: ");
-  fflush (stdout);
-  read (0, description, 20);
-  printf("DESCRIPTION: %s", description);
-
-  bzero (link, 20);
-  printf ("[client]Introduceti un link: ");
-  fflush (stdout);
-  read (0, link, 20);
-  printf("LINK: %s", link);
-
-  bzero (genres, 20);
-  printf ("[client]Selectati genurile: ");
-  fflush (stdout);
-  read (0, genres, 20);
-  printf("GENRES: %s", genres);
+  ProtocolService_readField(title, "title");
+  ProtocolService_readField(description, "description");
+  ProtocolService_readField(link, "link");
+  ProtocolService_readField(genres, "genres");
 
   // creare mesaj
-  strncat(msg, title, strlen(title) - 1);
-  strcat(msg, ":");
-  strncat(msg, description, strlen(description) - 1);
-  strcat(msg, ":");
-  strncat(msg, genres, strlen(genres) - 1);
-  strcat(msg, ":");
-  strncat(msg, link, strlen(link) - 1);
-
+  ProtocolService_createMsg(msg, 0, ":", 4, title, description, genres, link);
   printf("Mesajul este: %s\n", msg);
 
-  /* trimiterea mesajului la server */
-  if (write (sd, msg, 1000) <= 0)
-    {
-      perror ("[client]Eroare la write() spre server.\n");
-      // return errno;
-    }
+  ProtocolService_sendResponse(sd, msg, 100, WRITE_CLIENT);
 
-  /* citirea raspunsului dat de server 
-     (apel blocant pina cind serverul raspunde) */
-  if (read (sd, msg, 1000) < 0)
-    {
-      perror ("[client]Eroare la read() de la server.\n");
-      // return errno;
-    }
+  ProtocolService_readResponse(sd, msg, 100, READ_CLIENT);
   /* afisam mesajul primit */
   printf ("[client]Mesajul primit este: %s\n", msg);
 }
@@ -283,10 +193,5 @@ void addSong(int sd) {
 void closeApp(int sd) {
   char code[10] = "2";
 
-  /* trimiterea mesajului la server */
-  if (write (sd, code, 10) <= 0)
-    {
-      perror ("[client]Eroare la write() spre server.\n");
-      // return errno;
-    }
+  ProtocolService_sendResponse(sd, code, 10, WRITE_CLIENT);
 }

@@ -15,6 +15,7 @@
 #include <sqlite3.h>
 #include "DBService.h"
 #include "business.h"
+#include "ProtocolService.h"
 
 /* portul folosit */
 #define PORT 2024
@@ -181,57 +182,35 @@ int main ()
 
 void validateUsername(int client, struct User* user) {
 	char msg[100];		//mesajul primit de la client
-    char msgrasp[100]=" ";        //mesaj de raspuns pentru client
+    char msgrasp[100]="";        //mesaj de raspuns pentru client
 
-	/* s-a realizat conexiunea, se astepta mesajul */
-	bzero (msg, 100);
-	printf ("[server]Asteptam mesajul...\n");
-	fflush (stdout);
-
-	/* citirea mesajului */
-	if (read (client, msg, 100) <= 0)
-	{
-		perror ("[server]Eroare la read() de la client.\n");
-		close (client);	/* inchidem conexiunea cu clientul */
-	}
+	ProtocolService_prepareToRead(msg, 100);
+	ProtocolService_readResponse(client, msg, 100, READ_SERVER);
+	printf("message for validate-user: %s\n", msg);
 
 	int userExists = DBService_userExists(msg);
 
 	/*pregatim mesajul de raspuns */
-	bzero(msgrasp,100);
-
 	if(userExists) {
-		strcat(msgrasp, "[Error]: This username has already been taken!");
+		ProtocolService_createMsg(msgrasp, 1, " ", 1, "[Error]: This username has already been taken!");
 	} else {
-		strcat(msgrasp, "OK");
+		ProtocolService_createMsg(msgrasp, 1, " ", 1, "OK");
 	}
+
+	printf("userExists: %s\n", msgrasp);
 
 	printf("[server]Trimitem mesajul inapoi...%s\n",msgrasp);
-
 	/* returnam mesajul clientului */
-	if (write (client, msgrasp, 100) <= 0)
-	{
-		perror ("[server]Eroare la write() catre client.\n");
-	}
-	else
-		printf ("[server]Mesajul a fost trasmis cu succes.\n");
+	ProtocolService_sendResponse(client, msgrasp, 100, WRITE_SERVER);
+	printf ("[server]Mesajul a fost trasmis cu succes.\n");
 }
 
 void loginUser(int client, struct User* user) {
 	char msg[100];		//mesajul primit de la client
     char msgrasp[100]=" ";        //mesaj de raspuns pentru client
 
-	/* s-a realizat conexiunea, se astepta mesajul */
-	bzero (msg, 100);
-	printf ("[server]Asteptam mesajul...\n");
-	fflush (stdout);
-
-	/* citirea mesajului */
-	if (read (client, msg, 100) <= 0)
-	{
-		perror ("[server]Eroare la read() de la client.\n");
-		close (client);	/* inchidem conexiunea cu clientul */
-	}
+	ProtocolService_prepareToRead(msg, 100);
+	ProtocolService_readResponse(client, msg, 100, READ_SERVER);
 
 	char username[20], password[20];
 	char *sir = strtok(msg, ":");
@@ -254,51 +233,29 @@ void loginUser(int client, struct User* user) {
 	int code = DBService_loginUser(username, password, user);
 	printf("Apel DB: %d\n", code);
 
-	/*pregatim mesajul de raspuns */
-	bzero(msgrasp,100);
-	//strcat(msgrasp,"Error: ");
-	//strcat(msgrasp,msg);
-
 	switch (code) {
 		case 1:
-			strcat(msgrasp, "[Error]: The username or password is wrong!");
+			ProtocolService_createMsg(msgrasp, 1, " ", 1, "[Error]: The username or password is wrong!");
 			break;
-
 		case -1:
-			strcat(msgrasp, "[Error]: There was a problem with the DB");
+			ProtocolService_createMsg(msgrasp, 1, " ", 1, "[Error]: There was a problem with the DB");
 			break;
-		
 		default:
-			strcat(msgrasp, "OK");
+			ProtocolService_createMsg(msgrasp, 1, " ", 1, "OK");
 			break;
 	}
 
 	printf("[server]Trimitem mesajul inapoi...%s\n",msgrasp);
-
-	/* returnam mesajul clientului */
-	if (write (client, msgrasp, 100) <= 0)
-	{
-		perror ("[server]Eroare la write() catre client.\n");
-	}
-	else
-		printf ("[server]Mesajul a fost trasmis cu succes.\n");
+	ProtocolService_sendResponse(client, msgrasp, 100, WRITE_SERVER);
+	printf ("[server]Mesajul a fost trasmis cu succes.\n");
 }
 
 void registerUser(int client, struct User* user) {
 	char msg[100];		//mesajul primit de la client
     char msgrasp[100]=" ";        //mesaj de raspuns pentru client
 
-	/* s-a realizat conexiunea, se astepta mesajul */
-	bzero (msg, 100);
-	printf ("[server]Asteptam mesajul...\n");
-	fflush (stdout);
-
-	/* citirea mesajului */
-	if (read (client, msg, 100) <= 0)
-	{
-		perror ("[server]Eroare la read() de la client.\n");
-		close (client);	/* inchidem conexiunea cu clientul */
-	}
+	ProtocolService_prepareToRead(msg, 100);
+	ProtocolService_readResponse(client, msg, 100, READ_SERVER);
 
 	char username[20], password[20], role[20];
 	char *sir = strtok(msg, ":");
@@ -325,36 +282,19 @@ void registerUser(int client, struct User* user) {
 	printf("Apel DB: %d\n", code);
 
 	/*pregatim mesajul de raspuns */
-	bzero(msgrasp,100);
-	strcat(msgrasp,"Hello ");
-	strcat(msgrasp,msg);
+	ProtocolService_createMsg(msgrasp, 1, " ", 2, "Hello ", msg);
 
 	printf("[server]Trimitem mesajul inapoi...%s\n",msgrasp);
-
-	/* returnam mesajul clientului */
-	if (write (client, msgrasp, 100) <= 0)
-	{
-		perror ("[server]Eroare la write() catre client.\n");
-	}
-	else
-		printf ("[server]Mesajul a fost trasmis cu succes.\n");
+	ProtocolService_sendResponse(client, msgrasp, 100, WRITE_SERVER);
+	printf ("[server]Mesajul a fost trasmis cu succes.\n");
 }
 
 void addSong(int client) {
-	char msg[1000];		//mesajul primit de la client
-    char msgrasp[1000]=" ";        //mesaj de raspuns pentru client
+	char msg[100];		//mesajul primit de la client
+    char msgrasp[100]=" ";        //mesaj de raspuns pentru client
 
-	/* s-a realizat conexiunea, se astepta mesajul */
-	bzero (msg, 1000);
-	printf ("[server]Asteptam mesajul...\n");
-	fflush (stdout);
-
-	/* citirea mesajului */
-	if (read (client, msg, 1000) <= 0)
-	{
-		perror ("[server]Eroare la read() de la client.\n");
-		close (client);	/* inchidem conexiunea cu clientul */
-	}
+	ProtocolService_prepareToRead(msg, 100);
+	ProtocolService_readResponse(client, msg, 100, READ_SERVER);
 
 	char title[20], description[20], genres[20], link[20];
 	char *sir = strtok(msg, ":");
@@ -384,17 +324,13 @@ void addSong(int client) {
 	printf("Apel DB: %d\n", code);
 
 	/*pregatim mesajul de raspuns */
-	bzero(msgrasp,1000);
+	bzero(msgrasp,100);
 	strcat(msgrasp,"Hello ");
 	strcat(msgrasp,msg);
 
-	printf("[server]Trimitem mesajul inapoi...%s\n",msgrasp);
+	ProtocolService_createMsg(msgrasp, 1, " ", 2, "Hello ", msg);
 
-	/* returnam mesajul clientului */
-	if (write (client, msgrasp, 1000) <= 0)
-	{
-		perror ("[server]Eroare la write() catre client.\n");
-	}
-	else
-		printf ("[server]Mesajul a fost trasmis cu succes.\n");
+	printf("[server]Trimitem mesajul inapoi...%s\n",msgrasp);
+	ProtocolService_sendResponse(client, msgrasp, 100, WRITE_SERVER);
+	printf ("[server]Mesajul a fost trasmis cu succes.\n");
 }
