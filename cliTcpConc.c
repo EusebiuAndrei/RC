@@ -30,6 +30,7 @@ void addSong(int sd);
 void voteSong(int sd);
 void displaySongsNormal(int sd);
 void displaySongsByGenres(int sd);
+void addComment(int sd);
 
 void closeApp(int sd);
 
@@ -114,6 +115,11 @@ int main (int argc, char *argv[])
       case DISPLAY_GENRES:
         printf("Display genres\n");
         displaySongsByGenres(sd);
+        break;
+
+      case ADD_COMMENT:
+        printf("Add comment");
+        addComment(sd);
         break;
 
       case EXIT:
@@ -259,4 +265,26 @@ void voteSong(int sd) {
 
   ProtocolService_readResponse(sd, msg, 1000, READ_CLIENT);
   printf ("%s", msg);
+}
+
+void addComment(int sd) {
+  char msg[100] = "";		// mesajul trimis
+  char id_song[20], username[20], text[20];
+  char code[10] = "8";
+
+  ProtocolService_sendResponse(sd, code, 10, WRITE_CLIENT);
+
+  // citirea date
+  ProtocolService_readField(id_song, "id_song");
+  ProtocolService_readField(text, "text");
+
+  // creare mesaj
+  ProtocolService_createMsg(msg, 100, 0, ":", 2, id_song, text);
+  printf("Mesajul este: %s\n", msg);
+
+  ProtocolService_sendResponse(sd, msg, 100, WRITE_CLIENT);
+
+  ProtocolService_readResponse(sd, msg, 100, READ_CLIENT);
+  /* afisam mesajul primit */
+  printf ("[client]Mesajul primit este: %s\n", msg);
 }

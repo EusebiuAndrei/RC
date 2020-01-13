@@ -18,7 +18,7 @@
 #include "ProtocolService.h"
 
 /* portul folosit */
-#define PORT 2025
+#define PORT 2024
 
 /* codul de eroare returnat de anumite apeluri */
 extern int errno;
@@ -31,6 +31,8 @@ void displaySongsByGenres(int client);
 
 void addSong(int client);
 void voteSong(int client);
+
+void addComment(int client, struct User* user);
 
 int main ()
 {
@@ -174,6 +176,11 @@ int main ()
 					case DISPLAY_GENRES:
 						printf("Display genres\n");
 						displaySongsByGenres(client);
+						break;
+
+					case ADD_COMMENT:
+						printf("Add comment\n");
+						addComment(client, &user);
 						break;
 					
 					case EXIT:
@@ -420,5 +427,45 @@ void voteSong(int client) {
 
 	printf("[server]Trimitem mesajul inapoi\n%s",msgrasp);
 	ProtocolService_sendResponse(client, msgrasp, 1000, WRITE_SERVER);
+	printf ("[server]Mesajul a fost trasmis cu succes.\n");
+}
+
+void addComment(int client, struct User* user) {
+	char msg[100];		//mesajul primit de la client
+    char msgrasp[100]=" ";        //mesaj de raspuns pentru client
+
+	ProtocolService_prepareToRead(msg, 100);
+	ProtocolService_readResponse(client, msg, 100, READ_SERVER);
+
+	char id_song[20], text[20];
+	char *sir = strtok(msg, ":");
+	int i = 0;
+
+	while(sir) {
+		if(i == 0) 
+			strcpy(id_song, sir);
+		if(i == 1)
+			strcpy(text, sir);
+		i++;
+		sir = strtok(NULL, ":");
+	}
+
+	printf("ID_SONG: %s\n", id_song);
+	printf("TEXT: %s\n", text);
+	printf("USERNAME: %s\n", user->username);
+
+	// Apelam baza de date
+	int code = DBService_addComment(user->username, id_song, text);
+	printf("Apel DB: %d\n", code);
+
+	/*pregatim mesajul de raspuns */
+	bzero(msgrasp,100);
+	strcat(msgrasp,"Hello ");
+	strcat(msgrasp,msg);
+
+	ProtocolService_createMsg(msgrasp, 100, 1, " ", 2, "Hello ", msg);
+
+	printf("[server]Trimitem mesajul inapoi...%s\n",msgrasp);
+	ProtocolService_sendResponse(client, msgrasp, 100, WRITE_SERVER);
 	printf ("[server]Mesajul a fost trasmis cu succes.\n");
 }

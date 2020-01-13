@@ -7,3 +7,4 @@
 #define DISPLAY_NORMAL 5
 #define DISPLAY_GENRES 6
 #define VOTE_SONG 7
+#define ADD_COMMENT 8

@@ -284,7 +284,7 @@ int DBService_displaySongs(char msg[1000]) {
 int DBService_addComment(char username[20], char link[20], char text[20]) {
     if(!DBService_userExists(username)) return 1;
     
-    char query[500] = "INSERT INTO comments (id_song, id_user, text) SELECT * FROM (SELECT id_song FROM songs WHERE link = '?'), (SELECT id_user FROM users WHERE username = '?'), (SELECT '?');";
+    char query[500] = "INSERT INTO comments (id_song, id_user, text) SELECT * FROM (SELECT ?), (SELECT id_user FROM users WHERE username = '?'), (SELECT '?');";
     _bindParemter(query, link);
     _bindParemter(query, username);
     _bindParemter(query, text);
