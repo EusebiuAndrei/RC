@@ -109,7 +109,7 @@ int DBService_loginUser(char *username, char *password, struct User* user) {
     printf("%d\n", queryExecResponse);
 
     if(queryExecResponse == SQLITE_ROW) {
-        getRowInfo(USERS, "");
+        //getRowInfo(USERS, "");
         _populateUser(user);
         command = sqlite3_finalize(capat);
         return 0;
@@ -208,7 +208,7 @@ int DBService_removeSong(char link[20]) {
 }
 
 int DBService_voteSong(char link[20]) {
-    char query[QUERY_LENGTH] = "UPDATE songs SET votes = votes + 1 WHERE link = '?';";
+    char query[QUERY_LENGTH] = "UPDATE songs SET votes = votes + 1 WHERE id_song = '?';";
     _bindParemter(query, link);
 
     command = sqlite3_prepare_v2(DB, query, -1, &capat, 0);
@@ -371,7 +371,7 @@ void getUsers() {
    
     while(sqlite3_step(capat) == SQLITE_ROW) {
         printf("Good query\n");
-        getRowInfo(USERS, "");
+        //getRowInfo(USERS, "");
     }
 }
 

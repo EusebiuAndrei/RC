@@ -6,3 +6,4 @@
 #define ADD_SONG 4
 #define DISPLAY_NORMAL 5
 #define DISPLAY_GENRES 6
+#define VOTE_SONG 7

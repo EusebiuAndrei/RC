@@ -27,6 +27,7 @@ int port;
 void loginUser(int sd);
 void registerUser(int sd);
 void addSong(int sd);
+void voteSong(int sd);
 void displaySongsNormal(int sd);
 void displaySongsByGenres(int sd);
 
@@ -98,6 +99,11 @@ int main (int argc, char *argv[])
       case ADD_SONG:
         printf("Add song\n");
         addSong(sd);
+        break;
+
+      case VOTE_SONG:
+        printf("Vote song\n");
+        voteSong(sd);
         break;
 
       case DISPLAY_NORMAL:
@@ -233,6 +239,24 @@ void displaySongsByGenres(int sd) {
   
   ProtocolService_sendResponse(sd, msg, 1000, WRITE_CLIENT);
   
+  ProtocolService_readResponse(sd, msg, 1000, READ_CLIENT);
+  printf ("%s", msg);
+}
+
+void voteSong(int sd) {
+  char msg[1000] = "";		// mesajul trimis
+  char code[10] = "7";
+  char id_song[10];
+
+  ProtocolService_sendResponse(sd, code, 10, WRITE_CLIENT);
+  
+  ProtocolService_readField(id_song, "id_song");
+
+  ProtocolService_createMsg(msg, 1000, 0, ":", 1, id_song);
+  printf("MESSAGE: %s\n", msg);
+
+  ProtocolService_sendResponse(sd, msg, 1000, WRITE_CLIENT);
+
   ProtocolService_readResponse(sd, msg, 1000, READ_CLIENT);
   printf ("%s", msg);
 }
