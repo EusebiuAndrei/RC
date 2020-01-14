@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sqlite3.h>
-#include "UserService.h"
+#include "./services/UserService.h"
 
 #define QUERY_LENGTH 500
 
@@ -99,10 +99,8 @@ int DBService_loginUser(char *username, char *password, struct User* user) {
     char query[QUERY_LENGTH] = "SELECT * FROM users WHERE username = '?' AND password = '?';";
     _bindParemter(query, username);
     _bindParemter(query, password);
-
     command = sqlite3_prepare_v2(DB, query, -1, &capat, 0);
     printf("%s\n", sqlite3_sql(capat));
-
     int queryExecResponse = sqlite3_step(capat);
 
     printf("AM RULAT LOGIN\n");

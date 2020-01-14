@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "protocolservice.h": "c"
+        "protocolservice.h": "c",
+        "dbservice.h": "c",
+        "in.h": "c"
     }
 }
