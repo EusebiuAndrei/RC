@@ -14,6 +14,7 @@
 #include "../services/UserService.h"
 
 void ActionsHandler_loginUser(int client, struct User* user);
+void ActionsHandler_logoutUser(int client, struct User* user);
 void ActionsHandler_registerUser(int client, struct User* user);
 void ActionsHandler_validateUsername(int client, struct User* user);
 
@@ -92,6 +93,20 @@ void ActionsHandler_loginUser(int client, struct User* user) {
 			ProtocolService_createMsg(msgrasp, 100, 1, " ", 1, "OK");
 			break;
 	}
+
+	printf("[server]Trimitem mesajul inapoi...%s\n",msgrasp);
+	ProtocolService_sendResponse(client, msgrasp, 100, WRITE_SERVER);
+	printf ("[server]Mesajul a fost trasmis cu succes.\n");
+}
+
+void ActionsHandler_logoutUser(int client, struct User* user) {
+	char msg[100];		//mesajul primit de la client
+    char msgrasp[100]="";        //mesaj de raspuns pentru client
+
+	// Apelam baza de date
+	UserService_initializeUser(user);
+
+	ProtocolService_createMsg(msgrasp, 100, 1, " ", 1, "OK");
 
 	printf("[server]Trimitem mesajul inapoi...%s\n",msgrasp);
 	ProtocolService_sendResponse(client, msgrasp, 100, WRITE_SERVER);

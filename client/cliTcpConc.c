@@ -74,13 +74,20 @@ int main (int argc, char *argv[])
     fflush (stdout);
     read (0, code, 10);
 
-    codeInt = code[0] - '0';
+    char codeInt = code[0];
+    printf("SIR: %s\n", code);
+    printf("COD-CLIENT: %c\n", codeInt);
     
     switch (codeInt)
     {
       case LOGIN: 
-        printf("Login");
+        printf("Login\n");
         ActionsHandler_loginUser(sd);
+        break;
+
+      case LOGOUT:
+        printf("Logout\n");
+        AcionsHandler_logoutUser(sd);
         break;
 
       case REGISTER:

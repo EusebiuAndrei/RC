@@ -15,6 +15,7 @@
 #include "../services/ProtocolService.h"
 
 void ActionsHandler_loginUser(int sd);
+void AcionsHandler_logoutUser(int sd);
 void ActionsHandler_registerUser(int sd);
 
 void ActionsHandler_addSong(int sd);
@@ -45,6 +46,16 @@ void ActionsHandler_loginUser(int sd) {
   printf("MESSAGE: %s\n", msg);
   
   ProtocolService_sendResponse(sd, msg, 100, WRITE_CLIENT);
+  
+  ProtocolService_readResponse(sd, msg, 100, READ_CLIENT);
+  printf ("[client]Mesajul primit este: %s\n", msg);
+}
+
+void AcionsHandler_logoutUser(int sd) {
+  char msg[100] = "";		// mesajul trimis
+  char code[10] = "#";
+
+  ProtocolService_sendResponse(sd, code, 10, WRITE_CLIENT);
   
   ProtocolService_readResponse(sd, msg, 100, READ_CLIENT);
   printf ("[client]Mesajul primit este: %s\n", msg);

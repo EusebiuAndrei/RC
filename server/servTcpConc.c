@@ -125,17 +125,22 @@ int main ()
 
 				printf ("[server]Mesajul a fost receptionat...%s\n", msg);
 
-				char codeInt = msg[0] - '0';
+				char codeInt = msg[0];
 
-				printf("CODE\n");
-				printf("%s\n", msg);
-				printf("codeInt: %d\n", codeInt);
+				printf("SIR: %s\n", msg);
+				printf("CODE: %c\n", codeInt);
 
 				switch (codeInt)
 				{
 					case LOGIN:
 						ActionsHandler_loginUser(client, &user);
 						printf("Login\n");
+						UserService_displayUser(&user);
+						break;
+
+					case LOGOUT:
+						ActionsHandler_logoutUser(client, &user);
+						printf("Logout\n");
 						UserService_displayUser(&user);
 						break;
 
