@@ -138,7 +138,7 @@ int DBService_userExists(char username[20]) {
 }
 
 int DBService_denyVotes(char username[20]) {
-    char query[QUERY_LENGTH] = "UPDATE users SET canVote = 0 WHERE username = '?';";
+    char query[QUERY_LENGTH] = "UPDATE users SET canVote = CASE canVote WHEN 1 THEN 0 ELSE 1 END WHERE username = '?';";
     _bindParemter(query, username);
 
     command = sqlite3_prepare_v2(DB, query, -1, &capat, 0);
@@ -185,7 +185,7 @@ int DBService_addSong(char title[20], char description[20], char link[50], char 
 }
 
 int DBService_removeSong(char link[20]) {
-    char query[QUERY_LENGTH] = "DELETE FROM songs WHERE link = '?';";
+    char query[QUERY_LENGTH] = "DELETE FROM songs WHERE id_song = '?';";
     _bindParemter(query, link);
 
     printf("fsdfsdsd\n");

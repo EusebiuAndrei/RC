@@ -8,3 +8,5 @@
 #define DISPLAY_GENRES 6
 #define VOTE_SONG 7
 #define ADD_COMMENT 8
+#define DENY_VOTE 9
+#define DELETE_SONG -3

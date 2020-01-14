@@ -18,7 +18,7 @@
 #include "ProtocolService.h"
 
 /* portul folosit */
-#define PORT 2024
+#define PORT 2025
 
 /* codul de eroare returnat de anumite apeluri */
 extern int errno;
@@ -30,7 +30,9 @@ void displayUserNormal(int client);
 void displaySongsByGenres(int client);
 
 void addSong(int client);
+void deleteSong(int client);
 void voteSong(int client);
+void denyVote(int client);
 
 void addComment(int client, struct User* user);
 
@@ -127,7 +129,8 @@ int main ()
 				if (read (client, msg, 100) <= 0)
 				{
 					perror ("[server]Eroare la read() de la client.\n");
-					close (client);	/* inchidem conexiunea cu clientul */
+					close (client);
+					exit(2);	/* inchidem conexiunea cu clientul */
 					continue;		/* continuam sa ascultam */
 				}
 
@@ -163,9 +166,19 @@ int main ()
 						addSong(client);
 						break;
 
+					case DELETE_SONG:
+						printf("Delete song\n");
+						deleteSong(client);
+						break;
+
 					case VOTE_SONG:
 						printf("Vote song\n");
 						voteSong(client);
+						break;
+
+					case DENY_VOTE:
+						printf("Deny vote\n");
+						denyVote(client);
 						break;
 
 					case DISPLAY_NORMAL:
@@ -361,6 +374,31 @@ void addSong(int client) {
 	printf ("[server]Mesajul a fost trasmis cu succes.\n");
 }
 
+void deleteSong(int client) {
+	char msg[100];		//mesajul primit de la client
+    char msgrasp[1000];        //mesaj de raspuns pentru client
+
+	ProtocolService_prepareToRead(msg, 1000);
+	ProtocolService_readResponse(client, msg, 1000, READ_SERVER);
+
+	printf("ID_SONG: %s\n", msg);
+
+	// Apelam baza de date
+	bzero(msgrasp, 1000);
+	int code = DBService_removeSong(msg);
+	printf("Apel DB: %d\n", code);
+
+	if(code) {
+		ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "[Error]: There was a problem with the DB");
+	} else {
+		ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "OK");
+	}
+
+	printf("[server]Trimitem mesajul inapoi\n%s",msgrasp);
+	ProtocolService_sendResponse(client, msgrasp, 1000, WRITE_SERVER);
+	printf ("[server]Mesajul a fost trasmis cu succes.\n");
+}
+
 void displayUserNormal(int client) {
 	char msg[100];		//mesajul primit de la client
     char msgrasp[1000];        //mesaj de raspuns pentru client
@@ -417,6 +455,31 @@ void voteSong(int client) {
 	// Apelam baza de date
 	bzero(msgrasp, 1000);
 	int code = DBService_voteSong(msg);
+	printf("Apel DB: %d\n", code);
+
+	if(code) {
+		ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "[Error]: There was a problem with the DB");
+	} else {
+		ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "OK");
+	}
+
+	printf("[server]Trimitem mesajul inapoi\n%s",msgrasp);
+	ProtocolService_sendResponse(client, msgrasp, 1000, WRITE_SERVER);
+	printf ("[server]Mesajul a fost trasmis cu succes.\n");
+}
+
+void denyVote(int client) {
+	char msg[100];		//mesajul primit de la client
+    char msgrasp[1000];        //mesaj de raspuns pentru client
+
+	ProtocolService_prepareToRead(msg, 1000);
+	ProtocolService_readResponse(client, msg, 1000, READ_SERVER);
+
+	printf("USERNAME: %s\n", msg);
+
+	// Apelam baza de date
+	bzero(msgrasp, 1000);
+	int code = DBService_denyVotes(msg);
 	printf("Apel DB: %d\n", code);
 
 	if(code) {

@@ -27,10 +27,12 @@ int port;
 void loginUser(int sd);
 void registerUser(int sd);
 void addSong(int sd);
+void deleteSong(int sd);
 void voteSong(int sd);
 void displaySongsNormal(int sd);
 void displaySongsByGenres(int sd);
 void addComment(int sd);
+void denyVote(int sd);
 
 void closeApp(int sd);
 
@@ -102,9 +104,19 @@ int main (int argc, char *argv[])
         addSong(sd);
         break;
 
+      case DELETE_SONG:
+        printf("Delete song\n");
+        deleteSong(sd);
+        break;
+
       case VOTE_SONG:
         printf("Vote song\n");
         voteSong(sd);
+        break;
+
+      case DENY_VOTE:
+        printf("Deny vote\n");
+        denyVote(sd);
         break;
 
       case DISPLAY_NORMAL:
@@ -215,6 +227,24 @@ void addSong(int sd) {
   printf ("[client]Mesajul primit este: %s\n", msg);
 }
 
+void deleteSong(int sd) {
+  char msg[1000] = "";		// mesajul trimis
+  char code[10] = "-";
+  char id_song[10];
+
+  ProtocolService_sendResponse(sd, code, 10, WRITE_CLIENT);
+  
+  ProtocolService_readField(id_song, "id_song");
+
+  ProtocolService_createMsg(msg, 1000, 0, ":", 1, id_song);
+  printf("MESSAGE: %s\n", msg);
+
+  ProtocolService_sendResponse(sd, msg, 1000, WRITE_CLIENT);
+
+  ProtocolService_readResponse(sd, msg, 1000, READ_CLIENT);
+  printf ("%s", msg);
+}
+
 void closeApp(int sd) {
   char code[10] = "2";
 
@@ -259,6 +289,24 @@ void voteSong(int sd) {
   ProtocolService_readField(id_song, "id_song");
 
   ProtocolService_createMsg(msg, 1000, 0, ":", 1, id_song);
+  printf("MESSAGE: %s\n", msg);
+
+  ProtocolService_sendResponse(sd, msg, 1000, WRITE_CLIENT);
+
+  ProtocolService_readResponse(sd, msg, 1000, READ_CLIENT);
+  printf ("%s", msg);
+}
+
+void denyVote(int sd) {
+  char msg[1000] = "";		// mesajul trimis
+  char code[10] = "9";
+  char username[20];
+
+  ProtocolService_sendResponse(sd, code, 10, WRITE_CLIENT);
+  
+  ProtocolService_readField(username, "username");
+
+  ProtocolService_createMsg(msg, 1000, 0, ":", 1, username);
   printf("MESSAGE: %s\n", msg);
 
   ProtocolService_sendResponse(sd, msg, 1000, WRITE_CLIENT);
