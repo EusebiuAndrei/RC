@@ -18,6 +18,7 @@
 void ActionsHandler_loginUser(int sd, struct User* user);
 void AcionsHandler_logoutUser(int sd, struct User* user);
 void ActionsHandler_registerUser(int sd, struct User* user);
+int ActionsHandler_displayUsers(int sd);
 
 void ActionsHandler_addSong(int sd);
 void ActionsHandler_deleteSong(int sd);
@@ -25,7 +26,7 @@ void ActionsHandler_deleteSong(int sd);
 void ActionsHandler_voteSong(int sd);
 void ActionsHandler_denyVote(int sd);
 
-void ActionsHandler_displaySongsNormal(int sd);
+int ActionsHandler_displaySongsNormal(int sd);
 void ActionsHandler_displaySongsByGenres(int sd);
 
 void ActionsHandler_addComment(int sd);
@@ -140,6 +141,21 @@ void ActionsHandler_registerUser(int sd, struct User* user) {
   printf ("[client]Mesajul primit este: %s\n", msg);
 }
 
+int ActionsHandler_displayUsers(int sd) {
+  char msg[1000] = "";		// mesajul trimis
+  char code[10] = "$";
+
+  ProtocolService_sendResponse(sd, code, 10, WRITE_CLIENT);
+  
+  ProtocolService_readResponse(sd, msg, 1000, READ_CLIENT);
+  printf ("%s\n", msg);
+
+  if(strstr(msg, "[Error]") || strstr(msg, "[Res]")) {
+    return 1;
+  }
+  return 0;
+}
+
 void ActionsHandler_addSong(int sd) {
   char msg[100] = "";		// mesajul trimis
   char title[20], description[20], genres[20], link[20];
@@ -169,6 +185,10 @@ void ActionsHandler_deleteSong(int sd) {
   char code[10] = "-";
   char id_song[10];
 
+  if(ActionsHandler_displaySongsNormal(sd)) {
+    return;
+  }
+
   ProtocolService_sendResponse(sd, code, 10, WRITE_CLIENT);
   
   ProtocolService_readField(id_song, "id_song");
@@ -188,14 +208,19 @@ void ActionsHandler_closeApp(int sd) {
   ProtocolService_sendResponse(sd, code, 10, WRITE_CLIENT);
 }
 
-void ActionsHandler_displaySongsNormal(int sd) {
+int ActionsHandler_displaySongsNormal(int sd) {
   char msg[1000] = "";		// mesajul trimis
   char code[10] = "5";
 
   ProtocolService_sendResponse(sd, code, 10, WRITE_CLIENT);
   
   ProtocolService_readResponse(sd, msg, 1000, READ_CLIENT);
-  printf ("%s", msg);
+  printf ("%s\n", msg);
+
+  if(strstr(msg, "[Error]") || strstr(msg, "[Res]")) {
+    return 1;
+  }
+  return 0;
 }
 
 void ActionsHandler_displaySongsByGenres(int sd) {
@@ -221,7 +246,9 @@ void ActionsHandler_voteSong(int sd) {
   char code[10] = "7";
   char id_song[10];
 
-  ActionsHandler_displaySongsNormal(sd);
+  if(ActionsHandler_displaySongsNormal(sd)) {
+    return;
+  }
 
   ProtocolService_sendResponse(sd, code, 10, WRITE_CLIENT);
   
@@ -240,6 +267,10 @@ void ActionsHandler_denyVote(int sd) {
   char msg[1000] = "";		// mesajul trimis
   char code[10] = "9";
   char username[20];
+
+  if(ActionsHandler_displayUsers(sd)) {
+    return;
+  }
 
   ProtocolService_sendResponse(sd, code, 10, WRITE_CLIENT);
   
@@ -283,7 +314,9 @@ void ActionsHandler_displayComments(int sd) {
   char id_song[20];
   char code[10] = "*";
 
-  ActionsHandler_displaySongsNormal(sd);
+  if(ActionsHandler_displaySongsNormal(sd)) {
+    return;
+  }
 
   ProtocolService_sendResponse(sd, code, 10, WRITE_CLIENT);
 

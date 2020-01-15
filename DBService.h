@@ -26,6 +26,7 @@ int DBService_loginUser(char *username, char *password, struct User* user);
 int DBService_registerUser(char *role, char* username, char* password, struct User* user);
 int DBService_userExists(char username[20]);
 int DBService_denyVotes(char username[20]);
+int DBService_getUsers(char msg[1000]);
 
 int DBService_addSong(char title[20], char description[20], char link[50], char genres[50]);
 int DBService_removeSong(char link[20]);
@@ -135,6 +136,31 @@ int DBService_userExists(char username[20]) {
     return queryExecResponse == SQLITE_ROW ? 1 : 0;
 }
 
+int DBService_getUsers(char msg[1000]) {
+    char query[QUERY_LENGTH] = "SELECT * FROM users WHERE role = 'normal'";
+
+    command = sqlite3_prepare_v2(DB, query, -1, &capat, 0);
+    printf("%s\n", sqlite3_sql(capat));
+
+    int queryExecResponse = sqlite3_step(capat);
+
+    printf("%d\n", queryExecResponse);
+
+    if(queryExecResponse == SQLITE_ROW) {
+        getAllRows(USERS, msg);
+        command = sqlite3_finalize(capat);
+        return 0;
+    }
+
+    command = sqlite3_finalize(capat);
+
+    if(queryExecResponse == SQLITE_DONE) {
+        return 1;
+    }
+
+    return -1;
+}
+
 int DBService_denyVotes(char username[20]) {
     char query[QUERY_LENGTH] = "UPDATE users SET canVote = CASE canVote WHEN 1 THEN 0 ELSE 1 END WHERE username = '?';";
     _bindParemter(query, username);
@@ -183,7 +209,7 @@ int DBService_addSong(char title[20], char description[20], char link[50], char 
 }
 
 int DBService_removeSong(char link[20]) {
-    char query[QUERY_LENGTH] = "DELETE FROM songs WHERE id_song = '?';";
+    char query[QUERY_LENGTH] = "DELETE FROM songs WHERE id_song = ?;";
     _bindParemter(query, link);
 
     printf("fsdfsdsd\n");
@@ -195,7 +221,27 @@ int DBService_removeSong(char link[20]) {
     command = sqlite3_finalize(capat);
 
     if(queryExecResponse == SQLITE_DONE) {
-        return 0;
+        char query[QUERY_LENGTH] = "DELETE FROM comments WHERE id_song = ?;";
+        _bindParemter(query, link);
+
+        printf("fsdfsdsd\n");
+
+        command = sqlite3_prepare_v2(DB, query, -1, &capat, 0);
+        printf("%s\n", sqlite3_sql(capat));
+
+        int queryExecResponse = sqlite3_step(capat);
+        command = sqlite3_finalize(capat);
+
+        if(queryExecResponse == SQLITE_DONE) {
+            
+            return 0;
+        }
+
+        if(queryExecResponse == SQLITE_CONSTRAINT) {
+            return 1;
+        }
+
+        return -1;
     }
 
     if(queryExecResponse == SQLITE_CONSTRAINT) {

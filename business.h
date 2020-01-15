@@ -12,3 +12,4 @@
 #define DISPLAY_COMMENTS '*'
 #define DENY_VOTE '9'
 #define DELETE_SONG '-'
+#define DISPLAY_USERS '$'

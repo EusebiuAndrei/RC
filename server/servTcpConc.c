@@ -155,6 +155,11 @@ int main ()
 						ActionsHandler_validateUsername(client, &user);
 						break;
 
+					case DISPLAY_USERS:
+						printf("Display users\n");
+						ActionsHandler_displayUsers(client);
+						break;
+
 					case ADD_SONG:
 						printf("Add song\n");
 						ActionsHandler_addSong(client);

@@ -116,6 +116,15 @@ int main (int argc, char *argv[])
         Utils_displayMenu(&user);
         break;
 
+      case DISPLAY_USERS:
+        if(!UserService_isLoggedIn(&user)) 
+          break;
+        if(!UserService_userIsAdmin(&user)) 
+          break;
+        printf("Display users\n");
+        ActionsHandler_displayUsers(sd);
+        break;
+
       case ADD_SONG:
         if(!UserService_isLoggedIn(&user)) 
           break;
@@ -214,6 +223,7 @@ void Utils_displayMenu(struct User* user) {
     if(UserService_userIsAdmin(user)) {
       printf("Modify the ability to vote: %c\n", DENY_VOTE);
       printf("Delete a song: %c\n", DELETE_SONG);
+      printf("Display users: %c\n", DISPLAY_USERS);
     }
   }
 

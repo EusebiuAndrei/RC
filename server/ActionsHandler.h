@@ -17,6 +17,7 @@ void ActionsHandler_loginUser(int client, struct User* user);
 void ActionsHandler_logoutUser(int client, struct User* user);
 void ActionsHandler_registerUser(int client, struct User* user);
 void ActionsHandler_validateUsername(int client, struct User* user);
+void ActionsHandler_displayUsers(int client);
 
 void ActionsHandler_displayUserNormal(int client);
 void ActionsHandler_displaySongsByGenres(int client);
@@ -157,6 +158,36 @@ void ActionsHandler_registerUser(int client, struct User* user) {
 	printf ("[server]Mesajul a fost trasmis cu succes.\n");
 }
 
+void ActionsHandler_displayUsers(int client) {
+	char msg[1000];		//mesajul primit de la client
+    char msgrasp[1000];        //mesaj de raspuns pentru client
+
+
+	// Apelam baza de date
+	bzero(msgrasp, 1000);
+	int code = DBService_getUsers(msgrasp);
+	printf("Apel DB: %d\n", code);
+	printf("Another one\n%s", msgrasp);
+
+	switch (code) {
+		case 0:
+			ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "OK");
+			break;
+		
+		case 1:
+			ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "[Res]: There are no users");
+			break;
+
+		case -1:
+			ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "[Error]: There was a problem with the DB");
+			break;
+	}
+
+	printf("[server]Trimitem mesajul inapoi...%s\n",msgrasp);
+	ProtocolService_sendResponse(client, msgrasp, 1000, WRITE_SERVER);
+	printf ("[server]Mesajul a fost trasmis cu succes.\n");
+}
+
 void ActionsHandler_addSong(int client) {
 	char msg[100];		//mesajul primit de la client
     char msgrasp[100]=" ";        //mesaj de raspuns pentru client
@@ -239,8 +270,18 @@ void ActionsHandler_displayUserNormal(int client) {
 	printf("Apel DB: %d\n", code);
 	printf("Another one\n%s", msgrasp);
 
-	if(code) {
-		ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "[Error]: There was a problem with the DB");
+	switch (code){
+		case 0:
+			ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "OK");
+			break;
+
+		case 1:
+			ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "[Res]: There are no songs");
+			break;
+		
+		case -1:
+			ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "[Error]: There was a problem with the DB");
+			break;
 	}
 
 	printf("[server]Trimitem mesajul inapoi...%s\n",msgrasp);
