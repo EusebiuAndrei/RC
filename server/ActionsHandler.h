@@ -28,6 +28,7 @@ void ActionsHandler_voteSong(int client);
 void ActionsHandler_denyVote(int client);
 
 void ActionsHandler_addComment(int client, struct User* user);
+void ActionsHandler_displayComments(int client);
 
 void ActionsHandler_validateUsername(int client, struct User* user) {
 	char msg[100];		//mesajul primit de la client
@@ -228,7 +229,7 @@ void ActionsHandler_deleteSong(int client) {
 }
 
 void ActionsHandler_displayUserNormal(int client) {
-	char msg[100];		//mesajul primit de la client
+	char msg[1000];		//mesajul primit de la client
     char msgrasp[1000];        //mesaj de raspuns pentru client
 
 
@@ -248,7 +249,7 @@ void ActionsHandler_displayUserNormal(int client) {
 }
 
 void ActionsHandler_displaySongsByGenres(int client) {
-	char msg[100];		//mesajul primit de la client
+	char msg[1000];		//mesajul primit de la client
     char msgrasp[1000];        //mesaj de raspuns pentru client
 
 	ProtocolService_prepareToRead(msg, 1000);
@@ -257,13 +258,21 @@ void ActionsHandler_displaySongsByGenres(int client) {
 	printf("GEN: %s\n", msg);
 
 	// Apelam baza de date
-	bzero(msgrasp, 1000);
 	int code = DBService_displaySongsByGenres(msg, msgrasp);
 	printf("Apel DB: %d\n", code);
-	printf("BOOM\n%s", msgrasp);
 
-	if(code) {
-		ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "[Error]: There was a problem with the DB");
+	switch (code){
+		case 0:
+			ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "OK");
+			break;
+
+		case 1:
+			ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "[Res]: There are no songs with this genre");
+			break;
+		
+		case -1:
+			ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "[Error]: There was a problem with the DB");
+			break;
 	}
 
 	printf("[server]Trimitem mesajul inapoi\n%s",msgrasp);
@@ -358,5 +367,33 @@ void ActionsHandler_addComment(int client, struct User* user) {
 
 	printf("[server]Trimitem mesajul inapoi...%s\n",msgrasp);
 	ProtocolService_sendResponse(client, msgrasp, 100, WRITE_SERVER);
+	printf ("[server]Mesajul a fost trasmis cu succes.\n");
+}
+
+void ActionsHandler_displayComments(int client) {
+	char msg[1000];		//mesajul primit de la client
+    char msgrasp[1000];        //mesaj de raspuns pentru client
+
+	ProtocolService_prepareToRead(msg, 1000);
+	ProtocolService_readResponse(client, msg, 1000, READ_SERVER);
+
+	printf("ID_SONG: %s\n", msg);
+
+	// Apelam baza de date
+	int code = DBService_getCommentsForSong(msg, msgrasp);
+	printf("Apel DB: %d\n", code);
+
+	switch (code) {
+		case 1:
+			ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "[Res]: There are no comments for this song\n");
+			break;
+		
+		case -1:
+			ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "[Error]: There was a problem with the DB\n");
+			break;
+	}
+
+	printf("[server]Trimitem mesajul inapoi\n%s",msgrasp);
+	ProtocolService_sendResponse(client, msgrasp, 1000, WRITE_SERVER);
 	printf ("[server]Mesajul a fost trasmis cu succes.\n");
 }

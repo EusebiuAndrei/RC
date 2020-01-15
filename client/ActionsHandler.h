@@ -29,6 +29,7 @@ void ActionsHandler_displaySongsNormal(int sd);
 void ActionsHandler_displaySongsByGenres(int sd);
 
 void ActionsHandler_addComment(int sd);
+void ActionsHandler_displayComments(int sd);
 
 void ActionsHandler_closeApp(int sd);
 
@@ -49,9 +50,11 @@ void ActionsHandler_loginUser(int sd, struct User* user) {
   ProtocolService_sendResponse(sd, msg, 100, WRITE_CLIENT);
   
   ProtocolService_readResponse(sd, msg, 100, READ_CLIENT);
-  printf ("[client]Mesajul primit este: %s\n", msg);
 
-  if(strstr(msg, "[Error]")) return;
+  if(strstr(msg, "[Error]")) {
+    ActionsHandler_loginUser(sd, user);
+    printf ("[client]: %s\n", msg);
+  }
 
   char role[10], canVote[10];
   char *sir = strtok(msg, ":");
@@ -210,13 +213,15 @@ void ActionsHandler_displaySongsByGenres(int sd) {
   ProtocolService_sendResponse(sd, msg, 1000, WRITE_CLIENT);
   
   ProtocolService_readResponse(sd, msg, 1000, READ_CLIENT);
-  printf ("%s", msg);
+  printf ("%s\n", msg);
 }
 
 void ActionsHandler_voteSong(int sd) {
   char msg[1000] = "";		// mesajul trimis
   char code[10] = "7";
   char id_song[10];
+
+  ActionsHandler_displaySongsNormal(sd);
 
   ProtocolService_sendResponse(sd, code, 10, WRITE_CLIENT);
   
@@ -228,7 +233,7 @@ void ActionsHandler_voteSong(int sd) {
   ProtocolService_sendResponse(sd, msg, 1000, WRITE_CLIENT);
 
   ProtocolService_readResponse(sd, msg, 1000, READ_CLIENT);
-  printf ("%s", msg);
+  printf ("%s\n", msg);
 }
 
 void ActionsHandler_denyVote(int sd) {
@@ -246,13 +251,15 @@ void ActionsHandler_denyVote(int sd) {
   ProtocolService_sendResponse(sd, msg, 1000, WRITE_CLIENT);
 
   ProtocolService_readResponse(sd, msg, 1000, READ_CLIENT);
-  printf ("%s", msg);
+  printf ("%s\n", msg);
 }
 
 void ActionsHandler_addComment(int sd) {
   char msg[100] = "";		// mesajul trimis
   char id_song[20], username[20], text[20];
   char code[10] = "8";
+
+  ActionsHandler_displaySongsNormal(sd);
 
   ProtocolService_sendResponse(sd, code, 10, WRITE_CLIENT);
 
@@ -269,4 +276,24 @@ void ActionsHandler_addComment(int sd) {
   ProtocolService_readResponse(sd, msg, 100, READ_CLIENT);
   /* afisam mesajul primit */
   printf ("[client]Mesajul primit este: %s\n", msg);
+}
+
+void ActionsHandler_displayComments(int sd) {
+  char msg[1000] = "";		// mesajul trimis
+  char id_song[20];
+  char code[10] = "*";
+
+  ActionsHandler_displaySongsNormal(sd);
+
+  ProtocolService_sendResponse(sd, code, 10, WRITE_CLIENT);
+
+  ProtocolService_readField(id_song, "id_song");
+
+  ProtocolService_createMsg(msg, 1000, 0, ":", 1, id_song);
+  printf("MESSAGE: %s\n", msg);
+  
+  ProtocolService_sendResponse(sd, msg, 1000, WRITE_CLIENT);
+  
+  ProtocolService_readResponse(sd, msg, 1000, READ_CLIENT);
+  printf ("%s", msg);
 }

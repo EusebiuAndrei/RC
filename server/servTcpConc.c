@@ -20,7 +20,7 @@
 #include "./ActionsHandler.h"
 
 /* portul folosit */
-#define PORT 2024
+#define PORT 2025
 
 /* codul de eroare returnat de anumite apeluri */
 extern int errno;
@@ -188,6 +188,11 @@ int main ()
 					case ADD_COMMENT:
 						printf("Add comment\n");
 						ActionsHandler_addComment(client, &user);
+						break;
+
+					case DISPLAY_COMMENTS:
+						printf("Display comments\n");
+						ActionsHandler_displayComments(client);
 						break;
 					
 					case EXIT:

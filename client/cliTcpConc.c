@@ -165,8 +165,15 @@ int main (int argc, char *argv[])
       case ADD_COMMENT:
         if(!UserService_isLoggedIn(&user)) 
           break;
-        printf("Add comment");
+        printf("Add comment\n");
         ActionsHandler_addComment(sd);
+        break;
+
+      case DISPLAY_COMMENTS:
+        if(!UserService_isLoggedIn(&user)) 
+          break;
+        printf("Display comments\n");
+        ActionsHandler_displayComments(sd);
         break;
 
       case EXIT:
@@ -202,6 +209,7 @@ void Utils_displayMenu(struct User* user) {
     printf("Vote a song: %c\n", VOTE_SONG);
 
     printf("Add a comment to a song: %c\n", ADD_COMMENT);
+    printf("Display comments to a song: %c\n", DISPLAY_COMMENTS);
 
     if(UserService_userIsAdmin(user)) {
       printf("Modify the ability to vote: %c\n", DENY_VOTE);

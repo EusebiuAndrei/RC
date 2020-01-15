@@ -9,5 +9,6 @@
 #define DISPLAY_GENRES '6'
 #define VOTE_SONG '7'
 #define ADD_COMMENT '8'
+#define DISPLAY_COMMENTS '*'
 #define DENY_VOTE '9'
 #define DELETE_SONG '-'

@@ -31,7 +31,7 @@ int DBService_addSong(char title[20], char description[20], char link[50], char 
 int DBService_removeSong(char link[20]);
 int DBService_voteSong(char link[20]);
 int DBService_displaySongsByGenres(char genres[20], char msg[1000]);
-int DBService_displaySongs();
+int DBService_displaySongs(char msg[1000]);
 
 int DBService_addComment(char username[20], char link[20], char text[20]);
 int DBService_getCommentsForSong(char link[20], char msg[1000]);
@@ -305,7 +305,7 @@ int DBService_addComment(char username[20], char link[20], char text[20]) {
 }
 
 int DBService_getCommentsForSong(char link[20], char msg[1000]) {
-    char query[QUERY_LENGTH] = "SELECT * FROM comments WHERE id_song = (SELECT id_song FROM songs WHERE link = '?');";
+    char query[QUERY_LENGTH] = "SELECT * FROM comments WHERE id_song = ?;";
     _bindParemter(query, link);
 
     command = sqlite3_prepare_v2(DB, query, -1, &capat, 0);
