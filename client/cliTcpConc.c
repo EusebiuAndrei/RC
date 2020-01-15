@@ -88,6 +88,8 @@ int main (int argc, char *argv[])
     switch (codeInt)
     {
       case LOGIN: 
+        if(UserService_isLoggedIn(&user)) 
+          break;
         printf("Login\n");
         ActionsHandler_loginUser(sd, &user);
         if(UserService_isLoggedIn(&user)) {
@@ -97,6 +99,8 @@ int main (int argc, char *argv[])
         break;
 
       case LOGOUT:
+        if(!UserService_isLoggedIn(&user)) 
+          break;
         printf("Logout\n");
         AcionsHandler_logoutUser(sd, &user);
         UserService_displayUser(&user);
@@ -104,6 +108,8 @@ int main (int argc, char *argv[])
         break;
 
       case REGISTER:
+        if(UserService_isLoggedIn(&user)) 
+          break;
         printf("Register\n");
         ActionsHandler_registerUser(sd, &user);
         UserService_displayUser(&user);
@@ -111,36 +117,54 @@ int main (int argc, char *argv[])
         break;
 
       case ADD_SONG:
+        if(!UserService_isLoggedIn(&user)) 
+          break;
         printf("Add song\n");
         ActionsHandler_addSong(sd);
         break;
 
       case DELETE_SONG:
+        if(!UserService_isLoggedIn(&user)) 
+          break;
+        if(!UserService_userIsAdmin(&user)) 
+          break;
         printf("Delete song\n");
         ActionsHandler_deleteSong(sd);
         break;
 
       case VOTE_SONG:
+        if(!UserService_isLoggedIn(&user)) 
+          break;
         printf("Vote song\n");
         ActionsHandler_voteSong(sd);
         break;
 
       case DENY_VOTE:
+        if(!UserService_isLoggedIn(&user)) 
+          break;
+        if(!UserService_userIsAdmin(&user)) 
+          break;
         printf("Deny vote\n");
         ActionsHandler_denyVote(sd);
         break;
 
       case DISPLAY_NORMAL:
+        if(!UserService_isLoggedIn(&user)) 
+          break;
         printf("Display normal\n");
         ActionsHandler_displaySongsNormal(sd);
         break;
 
       case DISPLAY_GENRES:
+        if(!UserService_isLoggedIn(&user)) 
+          break;
         printf("Display genres\n");
         ActionsHandler_displaySongsByGenres(sd);
         break;
 
       case ADD_COMMENT:
+        if(!UserService_isLoggedIn(&user)) 
+          break;
         printf("Add comment");
         ActionsHandler_addComment(sd);
         break;
