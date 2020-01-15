@@ -185,6 +185,10 @@ int main (int argc, char *argv[])
         ActionsHandler_displayComments(sd);
         break;
 
+      case DISPLAY_MENU:
+        Utils_displayMenu(&user);
+        break;
+
       case EXIT:
         printf("Exit\n");
         isConnected = 0;
@@ -192,6 +196,8 @@ int main (int argc, char *argv[])
         ActionsHandler_closeApp(sd);
         break;
     }
+
+    printf("Show menu: %c\n", DISPLAY_MENU);
   }
 
   /* inchidem conexiunea, am terminat */

@@ -13,3 +13,4 @@
 #define DENY_VOTE '9'
 #define DELETE_SONG '-'
 #define DISPLAY_USERS '$'
+#define DISPLAY_MENU '@'

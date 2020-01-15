@@ -290,7 +290,9 @@ void ActionsHandler_addComment(int sd) {
   char id_song[20], username[20], text[20];
   char code[10] = "8";
 
-  ActionsHandler_displaySongsNormal(sd);
+  if(ActionsHandler_displaySongsNormal(sd)) {
+    return;
+  }
 
   ProtocolService_sendResponse(sd, code, 10, WRITE_CLIENT);
 
