@@ -31,10 +31,11 @@ void UserService_createUser(char username[20], char password[20], char role[20],
 }
 
 void UserService_displayUser(struct User* user) {
+    printf("\n== USER ==\n");
     printf("username: %s\n", user->username);
     printf("password: %s\n", user->password);
     printf("role: %s\n", user->role);
-    printf("canVote: %d\n", user->canVote);
+    printf("canVote: %d\n\n", user->canVote);
 }
 
 int UserService_isLoggedIn(struct User* user) {

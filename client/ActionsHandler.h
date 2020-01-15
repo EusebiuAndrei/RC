@@ -13,10 +13,11 @@
 
 #include "../business.h"
 #include "../services/ProtocolService.h"
+#include "../services/UserService.h"
 
-void ActionsHandler_loginUser(int sd);
-void AcionsHandler_logoutUser(int sd);
-void ActionsHandler_registerUser(int sd);
+void ActionsHandler_loginUser(int sd, struct User* user);
+void AcionsHandler_logoutUser(int sd, struct User* user);
+void ActionsHandler_registerUser(int sd, struct User* user);
 
 void ActionsHandler_addSong(int sd);
 void ActionsHandler_deleteSong(int sd);
@@ -32,7 +33,7 @@ void ActionsHandler_addComment(int sd);
 void ActionsHandler_closeApp(int sd);
 
 
-void ActionsHandler_loginUser(int sd) {
+void ActionsHandler_loginUser(int sd, struct User* user) {
   char msg[100] = "";		// mesajul trimis
   char username[20], password[20];
   char code[10] = "0";
@@ -49,9 +50,33 @@ void ActionsHandler_loginUser(int sd) {
   
   ProtocolService_readResponse(sd, msg, 100, READ_CLIENT);
   printf ("[client]Mesajul primit este: %s\n", msg);
+
+  if(strstr(msg, "[Error]")) return;
+
+  char role[10], canVote[10];
+  char *sir = strtok(msg, ":");
+	int i = 0;
+
+	while(sir) {
+		if(i == 0) 
+			strcpy(role, sir);
+		if(i == 1)
+			strcpy(canVote, sir);
+
+		i++;
+		sir = strtok(NULL, ":");
+	}
+
+  char usernameUser[20]="", passwordUser[20]="";
+  int canVoteInt = canVote[0] - '0';
+  strncat(usernameUser, username, strlen(username) - 1);
+  strncat(passwordUser, password, strlen(password) - 1);
+
+  UserService_createUser(usernameUser, passwordUser, role, canVoteInt, user);
+  printf("Login suceeded\n");
 }
 
-void AcionsHandler_logoutUser(int sd) {
+void AcionsHandler_logoutUser(int sd, struct User* user) {
   char msg[100] = "";		// mesajul trimis
   char code[10] = "#";
 
@@ -59,9 +84,13 @@ void AcionsHandler_logoutUser(int sd) {
   
   ProtocolService_readResponse(sd, msg, 100, READ_CLIENT);
   printf ("[client]Mesajul primit este: %s\n", msg);
+
+  UserService_initializeUser(user);
+
+  printf("Logout succeeded\n");
 }
 
-void ActionsHandler_registerUser(int sd) {
+void ActionsHandler_registerUser(int sd, struct User* user) {
   char msg[100] = "";		// mesajul trimis
   char username[20], password[20], role[20];
   char code[10] = "3";
@@ -80,7 +109,7 @@ void ActionsHandler_registerUser(int sd) {
 
   // Username-ul exista deja - needs retry
   if(strcmp(msg, "OK")) {
-    ActionsHandler_registerUser(sd);
+    ActionsHandler_registerUser(sd, user);
     return;
   }
 
@@ -96,6 +125,15 @@ void ActionsHandler_registerUser(int sd) {
   ProtocolService_sendResponse(sd, msg, 100, WRITE_CLIENT);
 
   ProtocolService_readResponse(sd, msg, 100, READ_CLIENT);
+
+  char usernameUser[20]="", passwordUser[20]="", roleUser[20]="";
+  strncat(usernameUser, username, strlen(username) - 1);
+  strncat(passwordUser, password, strlen(password) - 1);
+  strncat(roleUser, role, strlen(role) - 1);
+
+  UserService_createUser(usernameUser, passwordUser, roleUser, 1, user);
+  printf("Register succeded\n");
+
   printf ("[client]Mesajul primit este: %s\n", msg);
 }
 

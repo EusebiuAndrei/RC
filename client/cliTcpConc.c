@@ -16,6 +16,7 @@
 
 #include "../business.h"
 #include "../services/ProtocolService.h"
+#include "../services/UserService.h"
 #include "./ActionsHandler.h"
 
 // ProtocolService_
@@ -24,6 +25,8 @@ extern int errno;
 
 /* portul de conectare la server*/
 int port;
+
+void Utils_displayMenu(struct User* user);
 
 int main (int argc, char *argv[])
 {
@@ -67,6 +70,11 @@ int main (int argc, char *argv[])
   char code[10];
   int isConnected = 1, codeInt;
 
+  struct User user;
+  UserService_initializeUser(&user);
+
+  Utils_displayMenu(&user);
+
   while(isConnected) {
     // Select the command
     bzero (code, 10);
@@ -75,24 +83,31 @@ int main (int argc, char *argv[])
     read (0, code, 10);
 
     char codeInt = code[0];
-    printf("SIR: %s\n", code);
     printf("COD-CLIENT: %c\n", codeInt);
     
     switch (codeInt)
     {
       case LOGIN: 
         printf("Login\n");
-        ActionsHandler_loginUser(sd);
+        ActionsHandler_loginUser(sd, &user);
+        if(UserService_isLoggedIn(&user)) {
+          UserService_displayUser(&user);
+          Utils_displayMenu(&user);
+        }
         break;
 
       case LOGOUT:
         printf("Logout\n");
-        AcionsHandler_logoutUser(sd);
+        AcionsHandler_logoutUser(sd, &user);
+        UserService_displayUser(&user);
+        Utils_displayMenu(&user);
         break;
 
       case REGISTER:
         printf("Register\n");
-        ActionsHandler_registerUser(sd);
+        ActionsHandler_registerUser(sd, &user);
+        UserService_displayUser(&user);
+        Utils_displayMenu(&user);
         break;
 
       case ADD_SONG:
@@ -133,6 +148,7 @@ int main (int argc, char *argv[])
       case EXIT:
         printf("Exit\n");
         isConnected = 0;
+        printf("La revedere!\n");
         ActionsHandler_closeApp(sd);
         break;
     }
@@ -140,4 +156,36 @@ int main (int argc, char *argv[])
 
   /* inchidem conexiunea, am terminat */
   close (sd);
+}
+
+void Utils_displayMenu(struct User* user) {
+  int isLoggedIn = UserService_isLoggedIn(user);
+
+  printf("\n== MENU ==\n");
+
+  if(!isLoggedIn) {
+    printf("Login: %c\n", LOGIN);
+    printf("Register: %c\n", REGISTER);
+  } else {
+    printf("Logout: %c\n", LOGOUT);
+  }
+
+  if(isLoggedIn) {
+    printf("Display songs: %c\n", DISPLAY_NORMAL);
+    printf("Display songs by genres: %c\n", DISPLAY_GENRES);
+
+    printf("Add a song: %c\n", ADD_SONG);
+    printf("Vote a song: %c\n", VOTE_SONG);
+
+    printf("Add a comment to a song: %c\n", ADD_COMMENT);
+
+    if(UserService_userIsAdmin(user)) {
+      printf("Modify the ability to vote: %c\n", DENY_VOTE);
+      printf("Delete a song: %c\n", DELETE_SONG);
+    }
+  }
+
+  printf("Exit: %c\n", EXIT);
+
+  printf("== END ==\n\n");
 }

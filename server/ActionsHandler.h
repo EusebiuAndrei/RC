@@ -80,7 +80,9 @@ void ActionsHandler_loginUser(int client, struct User* user) {
 
 	// Apelam baza de date
 	int code = DBService_loginUser(username, password, user);
+	char canVoteChar[10] = "";
 	printf("Apel DB: %d\n", code);
+	UserService_displayUser(user);
 
 	switch (code) {
 		case 1:
@@ -90,7 +92,9 @@ void ActionsHandler_loginUser(int client, struct User* user) {
 			ProtocolService_createMsg(msgrasp, 100, 1, " ", 1, "[Error]: There was a problem with the DB");
 			break;
 		default:
-			ProtocolService_createMsg(msgrasp, 100, 1, " ", 1, "OK");
+			strcpy(canVoteChar, user->canVote == 0 ? "0" : "1");
+			printf("SENT BACK: %s %s", user->role, canVoteChar);
+			ProtocolService_createMsg(msgrasp, 100, 1, ":", 2, user->role, canVoteChar);
 			break;
 	}
 
