@@ -223,11 +223,19 @@ void ActionsHandler_addSong(int client) {
 	printf("Apel DB: %d\n", code);
 
 	/*pregatim mesajul de raspuns */
-	bzero(msgrasp,100);
-	strcat(msgrasp,"Hello ");
-	strcat(msgrasp,msg);
+	switch(code) {
+		case 0:
+			ProtocolService_createMsg(msgrasp, 100, 1, " ", 1, "OK");
+			break;
 
-	ProtocolService_createMsg(msgrasp, 100, 1, " ", 2, "Hello ", msg);
+		case 1:
+			ProtocolService_createMsg(msgrasp, 100, 1, " ", 1, "[Error]: Something went wrong. Try another song!");
+			break;
+
+		case -1:
+			ProtocolService_createMsg(msgrasp, 100, 1, " ", 1, "[Error]: There was an error with the DB");
+			break;	
+	}
 
 	printf("[server]Trimitem mesajul inapoi...%s\n",msgrasp);
 	ProtocolService_sendResponse(client, msgrasp, 100, WRITE_SERVER);
@@ -270,11 +278,7 @@ void ActionsHandler_displayUserNormal(int client) {
 	printf("Apel DB: %d\n", code);
 	printf("Another one\n%s", msgrasp);
 
-	switch (code){
-		case 0:
-			ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "OK");
-			break;
-
+	switch (code) {
 		case 1:
 			ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "[Res]: There are no songs");
 			break;
@@ -302,11 +306,7 @@ void ActionsHandler_displaySongsByGenres(int client) {
 	int code = DBService_displaySongsByGenres(msg, msgrasp);
 	printf("Apel DB: %d\n", code);
 
-	switch (code){
-		case 0:
-			ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "OK");
-			break;
-
+	switch (code) {
 		case 1:
 			ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "[Res]: There are no songs with this genre");
 			break;
@@ -400,11 +400,19 @@ void ActionsHandler_addComment(int client, struct User* user) {
 	printf("Apel DB: %d\n", code);
 
 	/*pregatim mesajul de raspuns */
-	bzero(msgrasp,100);
-	strcat(msgrasp,"Hello ");
-	strcat(msgrasp,msg);
+	switch(code) {
+		case 0:
+			ProtocolService_createMsg(msgrasp, 100, 1, " ", 1, "OK");
+			break;
 
-	ProtocolService_createMsg(msgrasp, 100, 1, " ", 2, "Hello ", msg);
+		case 1:
+			ProtocolService_createMsg(msgrasp, 100, 1, " ", 1, "[Res]: There is not a comment with this id");
+			break;
+
+		case -1:
+			ProtocolService_createMsg(msgrasp, 100, 1, " ", 1, "[Error]: There is a problem with the DB");
+			break;
+	}
 
 	printf("[server]Trimitem mesajul inapoi...%s\n",msgrasp);
 	ProtocolService_sendResponse(client, msgrasp, 100, WRITE_SERVER);

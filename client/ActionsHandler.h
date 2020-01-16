@@ -171,13 +171,18 @@ void ActionsHandler_addSong(int sd) {
 
   // creare mesaj
   ProtocolService_createMsg(msg, 100, 0, ":", 4, title, description, genres, link);
-  printf("Mesajul este: %s\n", msg);
+  // printf("Mesajul este: %s\n", msg);
 
   ProtocolService_sendResponse(sd, msg, 100, WRITE_CLIENT);
 
   ProtocolService_readResponse(sd, msg, 100, READ_CLIENT);
-  /* afisam mesajul primit */
-  printf ("[client]Mesajul primit este: %s\n", msg);
+  
+  if(!strcmp(msg, "OK")) {
+    printf("[Result]: Song added\n");
+    return;
+  }
+
+  printf("%s\n", msg);
 }
 
 void ActionsHandler_deleteSong(int sd) {
@@ -260,6 +265,12 @@ void ActionsHandler_voteSong(int sd) {
   ProtocolService_sendResponse(sd, msg, 1000, WRITE_CLIENT);
 
   ProtocolService_readResponse(sd, msg, 1000, READ_CLIENT);
+
+  if(!strcmp(msg, "OK")) {
+    printf("[Result]: Voted\n");
+    return;
+  }
+
   printf ("%s\n", msg);
 }
 
@@ -308,7 +319,13 @@ void ActionsHandler_addComment(int sd) {
 
   ProtocolService_readResponse(sd, msg, 100, READ_CLIENT);
   /* afisam mesajul primit */
-  printf ("[client]Mesajul primit este: %s\n", msg);
+
+  if(!strcmp(msg, "OK")) {
+    printf("[Result]: Comment added");
+    return;
+  }
+
+  printf ("%s\n", msg);
 }
 
 void ActionsHandler_displayComments(int sd) {
