@@ -6,9 +6,9 @@
 
 #define QUERY_LENGTH 500
 
-#define USERS_ROW_LENGTH 5
+#define USERS_ROW_LENGTH 3
 #define SONGS_ROW_LENGTH 6
-#define COMMENTS_ROW_LENGTH 4
+#define COMMENTS_ROW_LENGTH 2
 
 #define USERS "users"
 #define SONGS "songs"
@@ -136,8 +136,21 @@ int DBService_userExists(char username[20]) {
     return queryExecResponse == SQLITE_ROW ? 1 : 0;
 }
 
+int DBService_songExists(char id_song[20]) {
+    char query[QUERY_LENGTH] = "SELECT * FROM songs WHERE id_song = ?;";
+    _bindParemter(query, id_song);
+
+    command = sqlite3_prepare_v2(DB, query, -1, &capat, 0);
+    printf("%s\n", sqlite3_sql(capat));
+
+    int queryExecResponse = sqlite3_step(capat);
+    command = sqlite3_finalize(capat);
+
+    return queryExecResponse == SQLITE_ROW ? 1 : 0;
+}
+
 int DBService_getUsers(char msg[1000]) {
-    char query[QUERY_LENGTH] = "SELECT * FROM users WHERE role = 'normal'";
+    char query[QUERY_LENGTH] = "SELECT username, role, canVote FROM users WHERE role = 'normal'";
 
     command = sqlite3_prepare_v2(DB, query, -1, &capat, 0);
     printf("%s\n", sqlite3_sql(capat));
@@ -162,6 +175,11 @@ int DBService_getUsers(char msg[1000]) {
 }
 
 int DBService_denyVotes(char username[20]) {
+    int userExists = DBService_userExists(username);
+    if(!userExists) {
+        return 1;
+    }
+
     char query[QUERY_LENGTH] = "UPDATE users SET canVote = CASE canVote WHEN 1 THEN 0 ELSE 1 END WHERE username = '?';";
     _bindParemter(query, username);
 
@@ -209,6 +227,11 @@ int DBService_addSong(char title[20], char description[20], char link[50], char 
 }
 
 int DBService_removeSong(char link[20]) {
+    int songExists = DBService_songExists(link);
+    if(!songExists) {
+        return 1;
+    }
+
     char query[QUERY_LENGTH] = "DELETE FROM songs WHERE id_song = ?;";
     _bindParemter(query, link);
 
@@ -273,7 +296,7 @@ int DBService_voteSong(char link[20]) {
 }
 
 int DBService_displaySongsByGenres(char genres[20], char msg[1000]) {
-    char query[QUERY_LENGTH] = "SELECT * FROM songs WHERE genres LIKE '%?%' ORDER BY votes;";
+    char query[QUERY_LENGTH] = "SELECT * FROM songs WHERE genres LIKE '%?%' ORDER BY votes DESC;";
     _bindParemter(query, genres);
 
     command = sqlite3_prepare_v2(DB, query, -1, &capat, 0);
@@ -299,7 +322,7 @@ int DBService_displaySongsByGenres(char genres[20], char msg[1000]) {
 }
 
 int DBService_displaySongs(char msg[1000]) {
-    char query[QUERY_LENGTH] = "SELECT * FROM songs ORDER BY votes;";
+    char query[QUERY_LENGTH] = "SELECT * FROM songs ORDER BY votes DESC;";
 
     command = sqlite3_prepare_v2(DB, query, -1, &capat, 0);
     printf("%s\n", sqlite3_sql(capat));
@@ -351,7 +374,7 @@ int DBService_addComment(char username[20], char link[20], char text[20]) {
 }
 
 int DBService_getCommentsForSong(char link[20], char msg[1000]) {
-    char query[QUERY_LENGTH] = "SELECT * FROM comments WHERE id_song = ?;";
+    char query[QUERY_LENGTH] = "SELECT c.text, u.username FROM comments c JOIN users u ON c.id_user = u.id_user WHERE id_song = ?;";
     _bindParemter(query, link);
 
     command = sqlite3_prepare_v2(DB, query, -1, &capat, 0);
@@ -428,7 +451,7 @@ void getRowInfo(char *tabel, char row[100]) {
     if(!strcmp(tabel, COMMENTS)) n = COMMENTS_ROW_LENGTH;
 
     strcat(row, sqlite3_column_text(capat, 0));
-    for(int i = 0; i < n; ++i) {
+    for(int i = 1; i < n; ++i) {
         strcat(row, ":");
         strcat(row, sqlite3_column_text(capat, i));
     }
@@ -453,6 +476,6 @@ void getAllRows(char *tabel, char msg[1000]) {
         queryExecResponse = sqlite3_step(capat);
     } while(queryExecResponse == SQLITE_ROW);
 
-    // printf("Final ONE\n");
-    // printf("%s", msg);
+    printf("Final ONE\n");
+    printf("%s", msg);
 }

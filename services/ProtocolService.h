@@ -24,11 +24,11 @@ void ProtocolService_createMsg(char *msg, int length, int isServer, char *linker
 void ProtocolService_readField(char *field, char *numeField) {
   bzero (field, 20);
   
-  printf ("[client]Introduceti %s: ", numeField);
+  printf ("Enter %s: ", numeField);
   fflush (stdout);
   
   read (0, field, 20);
-  printf("%s: %s", numeField, field);
+  // printf("%s: %s", numeField, field);
 }
 
 void ProtocolService_readResponse(int sd, char* sir, int length, char *errorMsg) {

@@ -170,10 +170,6 @@ void ActionsHandler_displayUsers(int client) {
 	printf("Another one\n%s", msgrasp);
 
 	switch (code) {
-		case 0:
-			ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "OK");
-			break;
-		
 		case 1:
 			ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "[Res]: There are no users");
 			break;
@@ -255,11 +251,20 @@ void ActionsHandler_deleteSong(int client) {
 	bzero(msgrasp, 1000);
 	int code = DBService_removeSong(msg);
 	printf("Apel DB: %d\n", code);
+	printf("\n%d\n\n", DBService_songExists(msg));
 
-	if(code) {
-		ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "[Error]: There was a problem with the DB");
-	} else {
-		ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "OK");
+	switch(code) {
+		case 0:
+			ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "OK");
+			break;
+
+		case 1:
+			ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "[Error]: There are no songs with this id");
+			break;
+
+		case -1:
+			ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "[Error]: There was a problem with the DB");
+			break;
 	}
 
 	printf("[server]Trimitem mesajul inapoi\n%s",msgrasp);
@@ -360,10 +365,18 @@ void ActionsHandler_denyVote(int client) {
 	int code = DBService_denyVotes(msg);
 	printf("Apel DB: %d\n", code);
 
-	if(code) {
-		ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "[Error]: There was a problem with the DB");
-	} else {
-		ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "OK");
+	switch(code) {
+		case 0:
+			break;
+			ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "OK");
+
+		case 1:
+			ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "[Error]: There are no users with this id");
+			break;
+
+		case -1:
+			ProtocolService_createMsg(msgrasp, 1000, 1, " ", 1, "[Error]: There was a problem with the DB");
+			break;
 	}
 
 	printf("[server]Trimitem mesajul inapoi\n%s",msgrasp);

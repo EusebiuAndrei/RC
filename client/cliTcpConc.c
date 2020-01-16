@@ -78,19 +78,19 @@ int main (int argc, char *argv[])
   while(isConnected) {
     // Select the command
     bzero (code, 10);
-    printf ("[client]Alegeti o comanda: ");
+    printf ("Choose a command: ");
     fflush (stdout);
     read (0, code, 10);
 
     char codeInt = code[0];
-    printf("COD-CLIENT: %c\n", codeInt);
+    //printf("COD-CLIENT: %c\n", codeInt);
     
     switch (codeInt)
     {
       case LOGIN: 
         if(UserService_isLoggedIn(&user)) 
           break;
-        printf("Login\n");
+        //printf("Login\n");
         ActionsHandler_loginUser(sd, &user);
         if(UserService_isLoggedIn(&user)) {
           UserService_displayUser(&user);
@@ -101,16 +101,16 @@ int main (int argc, char *argv[])
       case LOGOUT:
         if(!UserService_isLoggedIn(&user)) 
           break;
-        printf("Logout\n");
+        //printf("Logout\n");
         AcionsHandler_logoutUser(sd, &user);
-        UserService_displayUser(&user);
+        //UserService_displayUser(&user);
         Utils_displayMenu(&user);
         break;
 
       case REGISTER:
         if(UserService_isLoggedIn(&user)) 
           break;
-        printf("Register\n");
+        //printf("Register\n");
         ActionsHandler_registerUser(sd, &user);
         UserService_displayUser(&user);
         Utils_displayMenu(&user);
@@ -121,14 +121,14 @@ int main (int argc, char *argv[])
           break;
         if(!UserService_userIsAdmin(&user)) 
           break;
-        printf("Display users\n");
+        //printf("Display users\n");
         ActionsHandler_displayUsers(sd);
         break;
 
       case ADD_SONG:
         if(!UserService_isLoggedIn(&user)) 
           break;
-        printf("Add song\n");
+        //printf("Add song\n");
         ActionsHandler_addSong(sd);
         break;
 
@@ -137,15 +137,15 @@ int main (int argc, char *argv[])
           break;
         if(!UserService_userIsAdmin(&user)) 
           break;
-        printf("Delete song\n");
+        //printf("Delete song\n");
         ActionsHandler_deleteSong(sd);
         break;
 
       case VOTE_SONG:
         if(!UserService_isLoggedIn(&user)) 
           break;
-        printf("Vote song\n");
-        ActionsHandler_voteSong(sd);
+        //printf("Vote song\n");
+        ActionsHandler_voteSong(sd, &user);
         break;
 
       case DENY_VOTE:
@@ -153,35 +153,35 @@ int main (int argc, char *argv[])
           break;
         if(!UserService_userIsAdmin(&user)) 
           break;
-        printf("Deny vote\n");
+        //printf("Deny vote\n");
         ActionsHandler_denyVote(sd);
         break;
 
       case DISPLAY_NORMAL:
         if(!UserService_isLoggedIn(&user)) 
           break;
-        printf("Display normal\n");
+        //printf("Display normal\n");
         ActionsHandler_displaySongsNormal(sd);
         break;
 
       case DISPLAY_GENRES:
         if(!UserService_isLoggedIn(&user)) 
           break;
-        printf("Display genres\n");
+        //printf("Display genres\n");
         ActionsHandler_displaySongsByGenres(sd);
         break;
 
       case ADD_COMMENT:
         if(!UserService_isLoggedIn(&user)) 
           break;
-        printf("Add comment\n");
+        //printf("Add comment\n");
         ActionsHandler_addComment(sd);
         break;
 
       case DISPLAY_COMMENTS:
         if(!UserService_isLoggedIn(&user)) 
           break;
-        printf("Display comments\n");
+        //printf("Display comments\n");
         ActionsHandler_displayComments(sd);
         break;
 
@@ -190,10 +190,14 @@ int main (int argc, char *argv[])
         break;
 
       case EXIT:
-        printf("Exit\n");
+        //printf("Exit\n");
         isConnected = 0;
         printf("La revedere!\n");
         ActionsHandler_closeApp(sd);
+        break;
+
+      default:
+        printf("Wrong command!\n");
         break;
     }
 

@@ -23,7 +23,7 @@ int ActionsHandler_displayUsers(int sd);
 void ActionsHandler_addSong(int sd);
 void ActionsHandler_deleteSong(int sd);
 
-void ActionsHandler_voteSong(int sd);
+void ActionsHandler_voteSong(int sd, struct User* user);
 void ActionsHandler_denyVote(int sd);
 
 int ActionsHandler_displaySongsNormal(int sd);
@@ -46,15 +46,15 @@ void ActionsHandler_loginUser(int sd, struct User* user) {
   ProtocolService_readField(password, "password");
 
   ProtocolService_createMsg(msg, 100, 0, ":", 2, username, password);
-  printf("MESSAGE: %s\n", msg);
+  //printf("MESSAGE: %s\n", msg);
   
   ProtocolService_sendResponse(sd, msg, 100, WRITE_CLIENT);
   
   ProtocolService_readResponse(sd, msg, 100, READ_CLIENT);
 
   if(strstr(msg, "[Error]")) {
-    ActionsHandler_loginUser(sd, user);
     printf ("[client]: %s\n", msg);
+    ActionsHandler_loginUser(sd, user);
   }
 
   char role[10], canVote[10];
@@ -104,12 +104,10 @@ void ActionsHandler_registerUser(int sd, struct User* user) {
   ProtocolService_readField(username, "username");
 
   ProtocolService_createMsg(msg, 100, 0, ":", 1, username);
-  printf("codul este %s\n", msg);
 
   ProtocolService_sendResponse(sd, msg, 100, WRITE_CLIENT);
 
   ProtocolService_readResponse(sd, msg, 100, READ_CLIENT);
-  printf("%s\n", msg);
 
   // Username-ul exista deja - needs retry
   if(strcmp(msg, "OK")) {
@@ -124,7 +122,6 @@ void ActionsHandler_registerUser(int sd, struct User* user) {
   ProtocolService_readField(role, "role");
 
   ProtocolService_createMsg(msg, 100, 0, ":", 3, username, password, role);
-  printf("Mesajul este: %s\n", msg);
 
   ProtocolService_sendResponse(sd, msg, 100, WRITE_CLIENT);
 
@@ -138,7 +135,7 @@ void ActionsHandler_registerUser(int sd, struct User* user) {
   UserService_createUser(usernameUser, passwordUser, roleUser, 1, user);
   printf("Register succeded\n");
 
-  printf ("[client]Mesajul primit este: %s\n", msg);
+  //printf ("[client]Mesajul primit este: %s\n", msg);
 }
 
 int ActionsHandler_displayUsers(int sd) {
@@ -148,11 +145,15 @@ int ActionsHandler_displayUsers(int sd) {
   ProtocolService_sendResponse(sd, code, 10, WRITE_CLIENT);
   
   ProtocolService_readResponse(sd, msg, 1000, READ_CLIENT);
-  printf ("%s\n", msg);
 
   if(strstr(msg, "[Error]") || strstr(msg, "[Res]")) {
+    printf ("%s\n", msg);
     return 1;
   }
+
+  printf("Users come in this format\n");
+  printf("username::role::canVote\n\n");
+  printf ("%s\n", msg);
   return 0;
 }
 
@@ -199,12 +200,17 @@ void ActionsHandler_deleteSong(int sd) {
   ProtocolService_readField(id_song, "id_song");
 
   ProtocolService_createMsg(msg, 1000, 0, ":", 1, id_song);
-  printf("MESSAGE: %s\n", msg);
 
   ProtocolService_sendResponse(sd, msg, 1000, WRITE_CLIENT);
 
   ProtocolService_readResponse(sd, msg, 1000, READ_CLIENT);
-  printf ("%s", msg);
+
+  if(!strcmp(msg, "OK")) {
+    printf("[Result]: Song deleted\n");
+    return;
+  }
+
+  printf ("%s\n", msg);
 }
 
 void ActionsHandler_closeApp(int sd) {
@@ -220,11 +226,15 @@ int ActionsHandler_displaySongsNormal(int sd) {
   ProtocolService_sendResponse(sd, code, 10, WRITE_CLIENT);
   
   ProtocolService_readResponse(sd, msg, 1000, READ_CLIENT);
-  printf ("%s\n", msg);
 
   if(strstr(msg, "[Error]") || strstr(msg, "[Res]")) {
+    printf ("%s\n", msg);
     return 1;
   }
+
+  printf("Songs come in this format\n");
+  printf("id_song::name::description::link::nrOfVotes::genres\n\n");
+  printf ("%s\n", msg);
   return 0;
 }
 
@@ -238,18 +248,31 @@ void ActionsHandler_displaySongsByGenres(int sd) {
   ProtocolService_readField(genre, "genre");
 
   ProtocolService_createMsg(msg, 1000, 0, ":", 1, genre);
-  printf("MESSAGE: %s\n", msg);
   
   ProtocolService_sendResponse(sd, msg, 1000, WRITE_CLIENT);
   
   ProtocolService_readResponse(sd, msg, 1000, READ_CLIENT);
+  
+  if(strstr(msg, "[Error]") || strstr(msg, "[Res]")) {
+    printf ("%s\n", msg);
+    return;
+  }
+
+  printf("Songs come in this format\n");
+  printf("id_song::name::description::link::nrOfVotes::genres\n\n");
   printf ("%s\n", msg);
+  return;
 }
 
-void ActionsHandler_voteSong(int sd) {
+void ActionsHandler_voteSong(int sd, struct User* user) {
   char msg[1000] = "";		// mesajul trimis
   char code[10] = "7";
   char id_song[10];
+
+  if(!user->canVote) {
+    printf("The ability to vote has been restricted!\n");
+    return;
+  }
 
   if(ActionsHandler_displaySongsNormal(sd)) {
     return;
@@ -288,11 +311,16 @@ void ActionsHandler_denyVote(int sd) {
   ProtocolService_readField(username, "username");
 
   ProtocolService_createMsg(msg, 1000, 0, ":", 1, username);
-  printf("MESSAGE: %s\n", msg);
 
   ProtocolService_sendResponse(sd, msg, 1000, WRITE_CLIENT);
 
   ProtocolService_readResponse(sd, msg, 1000, READ_CLIENT);
+  
+  if(!strcmp(msg, "OK")) {
+    printf("[Result]: Ability to vote changed\n");
+    return;
+  }
+
   printf ("%s\n", msg);
 }
 
@@ -313,7 +341,6 @@ void ActionsHandler_addComment(int sd) {
 
   // creare mesaj
   ProtocolService_createMsg(msg, 100, 0, ":", 2, id_song, text);
-  printf("Mesajul este: %s\n", msg);
 
   ProtocolService_sendResponse(sd, msg, 100, WRITE_CLIENT);
 
@@ -342,10 +369,18 @@ void ActionsHandler_displayComments(int sd) {
   ProtocolService_readField(id_song, "id_song");
 
   ProtocolService_createMsg(msg, 1000, 0, ":", 1, id_song);
-  printf("MESSAGE: %s\n", msg);
   
   ProtocolService_sendResponse(sd, msg, 1000, WRITE_CLIENT);
   
   ProtocolService_readResponse(sd, msg, 1000, READ_CLIENT);
-  printf ("%s", msg);
+
+  if(strstr(msg, "[Error]") || strstr(msg, "[Res]")) {
+    printf ("%s\n", msg);
+    return;
+  }
+
+  printf("Comments come in this format\n");
+  printf("text::username\n\n");
+  printf ("%s\n", msg);
+  return;
 }
