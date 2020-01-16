@@ -24,7 +24,11 @@ void ProtocolService_createMsg(char *msg, int length, int isServer, char *linker
 void ProtocolService_readField(char *field, char *numeField) {
   bzero (field, 20);
   
-  printf ("Enter %s: ", numeField);
+  printf ("Enter %s", numeField);
+  if(!strcmp(numeField, "role")) {
+    printf("[normal/admin]");
+  }
+  printf (": ");
   fflush (stdout);
   
   read (0, field, 20);

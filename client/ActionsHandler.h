@@ -121,6 +121,11 @@ void ActionsHandler_registerUser(int sd, struct User* user) {
   ProtocolService_readField(password, "password");
   ProtocolService_readField(role, "role");
 
+  while(strncmp(role, "normal", 6) && strncmp(role, "admin", 5)) {
+    printf("You have chosen an inexistent role\n");
+    ProtocolService_readField(role, "role");
+  }
+
   ProtocolService_createMsg(msg, 100, 0, ":", 3, username, password, role);
 
   ProtocolService_sendResponse(sd, msg, 100, WRITE_CLIENT);
